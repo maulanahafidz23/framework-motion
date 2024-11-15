@@ -1,0 +1,35 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+        
+        <a class="navbar-brand" href="/">
+            <img src="{% static 'images/Logo.png' %}" alt="Motion Gym Logo" width="150">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" aria-current="page" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/membership/' %}active{% endif %}" href="/membership/">Membership</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/personal_trainer/' %}active{% endif %}" href="/personal_trainer/">Personal Trainer</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/location/' %}active{% endif %}" href="/location/">Lokasi</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/classes/' %}active{% endif %}" href="/classes/">Kelas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/about/' %}active{% endif %}" href="/about/">Tentang Kami</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
