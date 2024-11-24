@@ -373,3 +373,4 @@ def transaction_update(request, pk):
 def transaction_index(request):
     transactions = Transaction.objects.all()
     return render(request, 'transaction/index.html', {'transactions': transactions})
+

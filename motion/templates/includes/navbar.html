@@ -1,5 +1,6 @@
 {% load static %}
 
+<<<<<<< HEAD
 <!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -18,6 +19,17 @@
         </button>
 
         <!-- Elemen Navbar Tengah -->
+=======
+<nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+        
+        <a class="navbar-brand" href="/">
+            <img src="{% static 'images/Logo.png' %}" alt="Motion Gym Logo" width="150">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+>>>>>>> 3b6734edb90d6e447b71ac8e82b767e9d66e1208
         <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
@@ -27,6 +39,12 @@
                     <a class="nav-link {% if request.path == '/membership/' %}active{% endif %}" href="/membership/">Membership</a>
                 </li>
                 <li class="nav-item">
+<<<<<<< HEAD
+=======
+                    <a class="nav-link {% if request.path == '/personal_trainer/' %}active{% endif %}" href="/personal_trainer/">Personal Trainer</a>
+                </li>
+                <li class="nav-item">
+>>>>>>> 3b6734edb90d6e447b71ac8e82b767e9d66e1208
                     <a class="nav-link {% if request.path == '/location/' %}active{% endif %}" href="/location/">Lokasi</a>
                 </li>
                 <li class="nav-item">
@@ -37,6 +55,7 @@
                 </li>
             </ul>
         </div>
+<<<<<<< HEAD
 
         <!-- Tombol di Kanan -->
         <div class="d-flex">
@@ -129,3 +148,7 @@
         sidebar.classList.remove('active');
     });
 </script>
+=======
+    </div>
+</nav>
+>>>>>>> 3b6734edb90d6e447b71ac8e82b767e9d66e1208

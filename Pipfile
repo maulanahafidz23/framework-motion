@@ -9,7 +9,10 @@ name = "pypi"
 
 [requires]
 python_version = "3.10"
+<<<<<<< HEAD
 Django
 Django Bootstrap5
 MySQLClient==2.2.4
 Pillow 
+=======
+>>>>>>> 3b6734edb90d6e447b71ac8e82b767e9d66e1208
