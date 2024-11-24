@@ -1,0 +1,89 @@
+{% extends 'dashboard/admin/layout.html' %}
+{% block title %} Daftar Anggota {% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Daftar Anggota</h1>
+    <a href="{% url 'member_create' %}" class="btn btn-primary mb-3">Tambah Anggota</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nama</th>
+                <th>Email</th>
+                <th>Nomer Telfon</th>
+                <th>Alamat</th>
+                <th>Membership</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in members %}
+            <tr>
+                <td>{{ member.name }}</td>
+                <td>{{ member.email }}</td>
+                <td>{{ member.phone }}</td>
+                <td>{{ member.address }}</td>
+                <td>{{ member.membership }}</td>
+                <td>
+                    <a href="{% url 'member_update' member.id %}" class="btn btn-sm btn-warning">Ubah</a>
+                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ member.id }}')">Hapus</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">Tidak ada data Anggota</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(memberId) {
+    Swal.fire({
+        title: 'Data Anggota akan dihapus',
+        text: 'Data tidak akan bisa dikembalikan!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Kirimkan request DELETE ke server
+            fetch(`/member/delete/${memberId}/`, {
+                method: 'POST',  // Gunakan POST, bukan DELETE
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ member_id: memberId })  // Kirim data ke server jika perlu
+            }).then(response => {
+                if (response.ok) {
+                    Swal.fire(
+                        'Deleted!',
+                        'Anggota telah dihapus.',
+                        'success'
+                    ).then(() => {
+                        window.location.reload();  // Reload halaman setelah berhasil dihapus
+                    });
+                } else {
+                    response.json().then(data => {
+                        Swal.fire(
+                            'Error!',
+                            data.error || 'Ada masalah dalam menghapus anggota.',
+                            'error'
+                        );
+                    });
+                }
+            }).catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'Ada masalah dengan server.',
+                    'error'
+                );
+            });
+        }
+    });
+}
+
+    </script>
+</div>
+{% endblock %}

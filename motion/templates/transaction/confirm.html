@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Konfirmasi Transaksi{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Konfirmasi Transaksi</h2>
+    <p class="text-center">Unggah bukti pembayaran untuk transaksi <strong>#{{ transaction.id }}</strong>.</p>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="proof_of_payment" class="form-label">Unggah Bukti Pembayaran</label>
+            <input type="file" class="form-control" id="proof_of_payment" name="proof_of_payment" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Kirim</button>
+        <a href="{% url 'membership_list' %}" class="btn btn-secondary">Kembali</a>
+    </form>
+</div>
+{% endblock %}

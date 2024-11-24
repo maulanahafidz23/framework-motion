@@ -1,4 +1,3 @@
-from .users import Users
 from .membership import Membership
 from .trainers import Trainer
 from .members import Member

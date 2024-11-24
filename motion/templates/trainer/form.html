@@ -1,0 +1,59 @@
+<form method="POST">
+    {% csrf_token %}
+    <!-- Name Field -->
+    <div class="mb-3">
+        <label for="id_name" class="form-label">Nama</label>
+        <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
+               id="id_name" 
+               name="name"
+               value="{{ form.name.value }}" 
+               required>
+        {% if form.name.errors %}
+        <div class="invalid-feedback">{{ form.name.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Email Field -->
+    <div class="mb-3">
+        <label for="id_email" class="form-label">Email</label>
+        <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+               id="id_email" 
+               name="email"
+               value="{{ form.email.value }}" 
+               required>
+        {% if form.email.errors %}
+        <div class="invalid-feedback">{{ form.email.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Gender Field -->
+    <div class="mb-3">
+        <label for="id_gender" class="form-label">Gender</label>
+        <select class="form-control {% if form.gender.errors %}is-invalid{% endif %}" 
+                id="id_gender" 
+                name="gender" 
+                required>
+            <option value="">Pilih Gender</option>
+            <option value="L" {% if trainer.gender == 'L' %}selected{% endif %}>Laki-laki</option>
+            <option value="P" {% if trainer.gender == 'P' %}selected{% endif %}>Perempuan</option>
+        </select>
+        {% if form.gender.errors %}
+        <div class="invalid-feedback">{{ form.gender.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Expertise Field -->
+    <div class="mb-3">
+        <label for="id_expertise" class="form-label">Keahlian</label>
+        <input type="text" class="form-control {% if form.expertise.errors %}is-invalid{% endif %}" 
+               id="id_expertise" 
+               name="expertise"
+               value="{{ form.expertise.value }}" 
+               required>
+        {% if form.expertise.errors %}
+        <div class="invalid-feedback">{{ form.expertise.errors }}</div>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>

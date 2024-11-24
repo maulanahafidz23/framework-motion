@@ -1,0 +1,51 @@
+{% extends 'dashboard/admin/layout.html' %}
+{% block title %} Daftar Transaksi {% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Daftar Transaksi</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Anggota</th>
+                <th>Membership</th>
+                <th>Kelas</th>
+                <th>Jumlah</th>
+                <th>Status</th>
+                <th>Tanggal</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr>
+                <td>{{ transaction.member.name }}</td>
+                <td>
+                    {% if transaction.membership %}
+                    {{ transaction.membership.name }}
+                    {% else %}
+                    Tidak ada
+                    {% endif %}
+                </td>
+                <td>
+                    {% if transaction.class_booking %}
+                    {{ transaction.class_booking.name }}
+                    {% else %}
+                    Tidak ada
+                    {% endif %}
+                </td>
+                <td>Rp {{ transaction.amount }}</td>
+                <td>{{ transaction.status }}</td>
+                <td>{{ transaction.create_date|date:"d M Y, H:i" }}</td>
+                <td>
+                    <a href="{% url 'transaction_update' transaction.id %}" class="btn btn-sm btn-warning">Ubah</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">Tidak ada data Transaksi</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

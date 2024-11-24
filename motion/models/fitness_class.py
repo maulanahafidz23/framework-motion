@@ -10,3 +10,7 @@ class FitnessClass(models.Model):
 
     def __str__(self):
         return self.name
+
+    def add_member(self, member):
+        if member not in self.members.all():
+            self.members.add(member)

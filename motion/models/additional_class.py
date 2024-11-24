@@ -7,3 +7,6 @@ class AdditionalClass(models.Model):
     proof_of_payment = models.ImageField(upload_to='additional_class/', null=True, blank=True)
     status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Paid', 'Paid')])
     date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.member.name} - {self.fit_class.name} - {self.status}"

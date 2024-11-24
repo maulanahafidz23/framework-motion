@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Membership | Motion Gym{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center">Membership Options</h2>
+        <p class="text-center">Pilih membership terbaik yang sesuai dengan kebutuhan kebugaran Anda:</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for membership in memberships %}
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ membership.name }}</h5>
+                <div class="card-text mb-4">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-clock"></i> {{ membership.duration }} hari</li>
+                        <li><i class="bi bi-calendar-check"></i> {{ membership.limit }} kelas/minggu</li>
+                        <li class="mt-2">
+                            <strong class="fs-5">Rp {{ membership.price|floatformat:0 }}</strong>
+                        </li>
+                    </ul>
+                </div>
+                {% if user.is_authenticated %}
+                    {% for group in user.groups.all %}
+                        {% if group.name == 'Member' %}
+                        <a href="{% url 'create_transaction' membership.id %}" class="btn btn-primary mt-auto">Join Now</a>
+
+                        {% else %}
+                            <p class="text-muted">Hanya Member yang dapat bergabung.</p>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-primary mt-auto">Login untuk Join</a>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-warning text-center">
+            Tidak ada membership tersedia saat ini.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

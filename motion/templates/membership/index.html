@@ -1,0 +1,77 @@
+{% extends 'dashboard/admin/layout.html' %}
+{% block title %} Daftar Membership {% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Daftar Membership</h1>
+    <a href="{% url 'membership_create' %}" class="btn btn-primary mb-3">Tambah Membership</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nama</th>
+                <th>Harga</th>
+                <th>Limit</th>
+                <th>Durasi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membership in memberships %}
+            <tr>
+                <td>{{ membership.name }}</td>
+                <td>Rp. {{ membership.price }}</td>
+                <td>{{ membership.limit }} kelas / perminggu</td>
+                <td>{{ membership.duration }} Hari</td>
+                <td>
+                    <a href="{% url 'membership_update' membership.id %}" class="btn btn-sm btn-warning">Ubah</a>
+                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ membership.id }}')">Hapus</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">Tidak ada data Membership</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(membershipId) {
+            Swal.fire({
+                title: 'Data membership akan dihapus',
+                text: 'Data tidak akan bisa dikembalikan!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Ini AJAX
+                    fetch(`/membership/delete/${membershipId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            Swal.fire(
+                                'Deleted!',
+                                'Membership has been deleted.',
+                                'success'
+                            ).then(() => {
+                                // Reload the page after success
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                'There was an issue deleting the membership.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</div>
+{% endblock %}

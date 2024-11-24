@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Transaction(models.Model):
     member = models.ForeignKey('Member', on_delete=models.CASCADE)
@@ -11,3 +13,12 @@ class Transaction(models.Model):
     
     def __str__(self):
         return f"Transaction {self.id} - {self.status}"
+
+
+@receiver(post_save, sender=Transaction)
+def update_membership(sender, instance, **kwargs):
+    if instance.status == 'Paid':
+        # Perbarui membership member
+        member = instance.member
+        member.membership = instance.membership
+        member.save()

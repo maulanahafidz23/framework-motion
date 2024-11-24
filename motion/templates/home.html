@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | Motion Gym{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <h1 class="display-3 fw-bold">Welcome to Motion Gym</h1>
+        <p class="lead">Your Fitness Journey Starts Here!</p>
+        <a href="{% url 'membership_list' %}" class="btn btn-lg btn-primary mt-3">Join Now</a>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-4 text-center">
+            <img src="/static/images/home-1.png" alt="State-of-the-Art Equipment" class="img-fluid rounded shadow">
+            <h3 class="mt-3">State-of-the-Art Equipment</h3>
+            <p>Experience the best fitness machines for an effective workout.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <img src="/static/images/home-2.png" alt="Professional Trainers" class="img-fluid rounded shadow">
+            <h3 class="mt-3">Professional Trainers</h3>
+            <p>Get guidance from certified trainers to achieve your fitness goals.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <img src="/static/images/home-3.png" alt="Variety of Classes" class="img-fluid rounded shadow">
+            <h3 class="mt-3">Variety of Classes</h3>
+            <p>From Yoga to HIIT, find the perfect class for you.</p>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

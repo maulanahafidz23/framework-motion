@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Buat Transaksi | Motion Gym{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Buat Transaksi</h2>
+    <p class="text-center">Lengkapi formulir berikut untuk membeli membership <strong>{{ membership.name }}</strong>.
+    </p>
+
+    <!-- Informasi Member -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Informasi Member</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>Nama:</strong> {{ member.name }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Email:</strong> {{ member.email }}
+                </li>
+                <li class="list-group-item">
+                    <strong>No. Telepon:</strong> {{ member.phone }}
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- Formulir -->
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Konfirmasi</button>
+        <a href="{% url 'membership_list' %}" class="btn btn-secondary">Kembali</a>
+    </form>
+</div>
+{% endblock %}

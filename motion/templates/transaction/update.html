@@ -1,0 +1,83 @@
+{% extends 'dashboard/admin/layout.html' %}
+{% block title %} Update Transaksi {% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Update Status Transaksi</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Anggota</label>
+            <input type="text" class="form-control" value="{{ transaction.member.name }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Jumlah</label>
+            <input type="text" class="form-control" value="Rp {{ transaction.amount }}" readonly>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="Pending" {% if transaction.status == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Paid" {% if transaction.status == 'Paid' %}selected{% endif %}>Paid</option>
+                <option value="Failed" {% if transaction.status == 'Failed' %}selected{% endif %}>Failed</option>
+            </select>
+        </div>
+        
+        <!-- Bagian Bukti Pembayaran -->
+        <div class="mb-3">
+            <label class="form-label">Bukti Pembayaran</label>
+            {% if transaction.proof_of_payment %}
+                <div class="mb-2">
+                    <img src="{{ transaction.proof_of_payment.url }}" alt="Bukti Pembayaran" 
+                         class="img-fluid" style="max-width: 400px;">
+                </div>
+                <a href="{{ transaction.proof_of_payment.url }}" 
+                   class="btn btn-info btn-sm" target="_blank">
+                    Lihat Gambar Full
+                </a>
+            {% else %}
+                <div class="alert alert-info">
+                    Belum ada bukti pembayaran yang diupload
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Tombol aksi -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Update Status</button>
+            <a href="{% url 'transaction_index' %}" class="btn btn-secondary">Kembali</a>
+        </div>
+    </form>
+</div>
+
+<!-- Modal untuk preview gambar (opsional) -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bukti Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" src="" alt="Preview" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Script untuk menampilkan preview gambar di modal (opsional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const previewLinks = document.querySelectorAll('[data-preview]');
+        previewLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const imgUrl = this.getAttribute('href');
+                document.getElementById('previewImage').src = imgUrl;
+                new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}
