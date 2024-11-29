@@ -1,5 +1,6 @@
 <form method="POST" class="membership-form needs-validation" novalidate>
     {% csrf_token %}
+    {{ form.as_p }}
     <div class="card shadow-lg border-0">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0 text-center">

@@ -32,6 +32,31 @@ class TrainersForm(forms.ModelForm):
                 raise forms.ValidationError("Email sudah digunakan.")
         return email
     
+class TrainerUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Trainer
+        fields = ['name', 'email', 'expertise', 'gender']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'expertise': forms.TextInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+class TrainerChangePasswordForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label="Password Lama",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    new_password1 = forms.CharField(
+        label="Password Baru",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    new_password2 = forms.CharField(
+        label="Konfirmasi Password Baru",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    
 class MembersForm(forms.ModelForm):
     class Meta:
         model = Member

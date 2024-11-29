@@ -2,7 +2,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib import messages
-from .forms import MemberChangePasswordForm, MembershipsForm, TrainersForm, MembersForm, FitnessClassForm, TransactionForm, MemberRegistrationForm, MemberUpdateForm
+import requests
+from .forms import MemberChangePasswordForm, MembershipsForm, TrainerChangePasswordForm, TrainerUpdateForm, TrainersForm, MembersForm, FitnessClassForm, TransactionForm, MemberRegistrationForm, MemberUpdateForm
 from .models import Trainer, Membership, Member, FitnessClass, Transaction, AdditionalClass
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponseForbidden
@@ -10,6 +11,10 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 import os
 from .decorators import admin_required
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import MembershipSerializer
 
 
 ### ---   PUBLIK   --- ###
@@ -90,10 +95,46 @@ def logout_view(request):
 def profile_trainer(request):
     try:
         trainer = Trainer.objects.get(email=request.user.email)
+        form = TrainerUpdateForm(instance=trainer)
     except Trainer.DoesNotExist:
         trainer = None
 
-    return render(request, 'dashboard/trainer/profile.html', {'trainer': trainer})
+    return render(request, 'dashboard/trainer/profile.html', {'trainer': trainer, 'profile_form': form})
+
+@login_required
+def edit_profile_trainer(request, trainer_id):
+    try:
+        trainer = Trainer.objects.get(id=trainer_id)
+        if request.method == 'POST':
+            form = TrainerUpdateForm(request.POST, instance=trainer)
+            print("Data POST diterima:", request.POST)  # Debug data POST
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'success': True})
+            else:
+                print("Error pada form:", form.errors.as_json())  # Log error form
+                return JsonResponse({'success': False, 'error': form.errors.as_json()})
+        return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    except Trainer.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Trainer not found'})
+
+    
+@login_required
+def change_password_trainer(request):
+    if request.method == 'POST':
+        form_password = TrainerChangePasswordForm(user=request.user, data=request.POST)
+        if form_password.is_valid():
+            form_password.save()  
+            update_session_auth_hash(request, form_password.user)
+            return JsonResponse({'success': True})
+        else:
+            error_messages = []
+            for field, errors in form_password.errors.items():
+                for error in errors:
+                    error_messages.append(error)  
+            error_message = " ".join(error_messages)  
+            return JsonResponse({'success': False, 'error': error_message})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 def trainer_classes(request):
@@ -113,6 +154,8 @@ def trainer_classes(request):
         'all_classes': all_classes,
         'my_classes': my_classes,
     })
+
+
 
 
 ### ---   MEMBER   --- ###
@@ -329,67 +372,9 @@ def transaction_history(request):
 
 
 
-# Autentikasi untuk menu tambahan di Navbar
-def your_view(request):
-    # Pastikan user sudah login
-    if request.user.is_authenticated:
-        # Debug: print untuk mengecek group user
-        print("User Groups:", request.user.groups.all())
-        
-        is_member = request.user.groups.filter(name='Member').exists()
-        # Debug: print status member
-        print("Is Member:", is_member)
-    else:
-        is_member = False
-
-    context = {
-        'is_member': is_member,
-    }
-    return render(request, 'includes/navbar.html', context)
-
-
 ### ---   ADMIN   --- ###
 
-# READ Membership
-@admin_required
-def membership_index(request):
-    memberships = Membership.objects.all()
-    return render(request, 'membership/index.html', {'memberships': memberships})
-    
-# CREATE Membership
-@admin_required
-def membership_create(request):
-    if request.method == 'POST':
-        form = MembershipsForm(request.POST)
-        if form.is_valid():
-            form.save() # Simpan data membership ke database
-            messages.success(request, 'Membership berhasil dibuat!') # Pesan sukses
-            return redirect('membership_index') # Redirect ke halaman index membership
-    else:
-        form = MembershipsForm()
-    return render(request, 'membership/create.html', {'form': form})
 
-# UPDATE Membership
-@admin_required
-def membership_update(request, membership_id):
-    membership = get_object_or_404(Membership, id=membership_id)
-    if request.method == 'POST':
-        form = MembershipsForm(request.POST, instance=membership)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Data membership berhasil diubah!')
-            return redirect('membership_index')
-    else:
-        form = MembershipsForm(instance=membership)
-    return render(request, 'membership/update.html', {'form': form, 'membership': membership})
-
-# DELETE Membership
-@admin_required
-def membership_delete(request, membership_id):
-    membership = get_object_or_404(Membership, id=membership_id)
-    membership.delete()
-    messages.success(request, 'Data membership berhasil dihapus')
-    return JsonResponse({'success': True})
 
 
 # READ Trainer
@@ -635,3 +620,101 @@ def validate_payment_proof(file):
     except:
         # Jika gagal memvalidasi dimensi, lewati
         pass
+    
+    
+    
+    
+from rest_framework import viewsets
+from .serializers import MembershipSerializer
+...
+# API
+class MembershipViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint yang memungkinkan operasi CRUD untuk model Membership.
+    """
+    queryset = Membership.objects.all()
+    serializer_class = MembershipSerializer # Menggunakan serializer yang sudah kita buat
+    
+
+# CREATE Membership
+def membership_create(request):
+    if request.method == 'POST':
+        form_data = {
+            'name': request.POST.get('name'),
+            'price': request.POST.get('price'),
+            'duration': request.POST.get('duration'),  # Misalnya durasi dalam hari/bulan
+            'limit': request.POST.get('limit')  # Ambil data limit
+        }
+        response = requests.post('http://127.0.0.1:8000/api/memberships/', data=form_data)
+        if response.status_code == 201:
+            messages.success(request, 'Membership berhasil dibuat!')
+            return redirect('membership_index')
+        else:
+            messages.error(request, f'Gagal membuat membership: {response.text}')
+    else:
+        form_data = {}
+
+    return render(request, 'membership/create.html', {'form': MembershipsForm()})
+
+
+
+# READ Membership
+def membership_index(request):
+    # Mengirim GET request untuk mengambil semua data membership
+    response = requests.get('http://127.0.0.1:8000/api/memberships/')
+
+    if response.status_code == 200:
+        memberships = response.json()  # Ambil data membership dalam format JSON
+    else:
+        memberships = []  # Jika gagal, siapkan list kosong
+
+    return render(request, 'membership/index.html', {'memberships': memberships})
+
+
+
+def membership_update(request, membership_id):
+    if request.method == 'POST':
+        # Mengambil data dari form
+        form_data = {
+            'name': request.POST.get('name'),
+            'price': request.POST.get('price'),
+            'duration': request.POST.get('duration'),  # Durasi dalam hari
+            'limit': request.POST.get('limit'),
+        }
+        # Mengirim PUT request ke API
+        response = requests.put(
+            f'http://127.0.0.1:8000/api/memberships/{membership_id}/',
+            data=form_data
+        )
+        if response.status_code == 200:  # Jika berhasil
+            messages.success(request, 'Data membership berhasil diubah!')
+            return redirect('membership_index')  # Redirect ke halaman index membership
+        else:
+            messages.error(request, f'Gagal mengubah membership: {response.text}')
+    else:
+        # Mendapatkan data membership saat ini dari API
+        response = requests.get(f'http://127.0.0.1:8000/api/memberships/{membership_id}/')
+        if response.status_code == 200:
+            membership = response.json()  # Ambil data membership dalam format JSON
+        else:
+            return HttpResponseForbidden("Data membership tidak ditemukan.")
+
+    # Render halaman dengan form berisi data awal
+    return render(request, 'membership/update.html', {
+        'form': MembershipsForm(initial=membership), 
+        'membership': membership
+    })
+
+
+def membership_delete(request, membership_id):
+    if request.method == 'POST':  # Hanya menerima metode POST untuk menghapus
+        # Mengirim DELETE request ke API
+        response = requests.delete(f'http://127.0.0.1:8000/api/memberships/{membership_id}/')
+        if response.status_code == 204:  # No Content, berarti berhasil dihapus
+            messages.success(request, 'Data membership berhasil dihapus')
+            return JsonResponse({'success': True})
+        else:
+            messages.error(request, f'Gagal menghapus membership: {response.text}')
+            return JsonResponse({'success': False})
+    else:
+        return HttpResponseForbidden("Metode tidak diizinkan.")

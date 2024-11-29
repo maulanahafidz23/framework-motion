@@ -1,7 +1,12 @@
 
-from django.urls import path
+from django.urls import path, include
 from . import views
 from django.contrib.auth import views as auth_views
+from rest_framework.routers import DefaultRouter
+from .views import MembershipViewSet
+
+router = DefaultRouter() # Membuat router DRF
+router.register(r'memberships', MembershipViewSet)
 
 urlpatterns = [
     # Halaman utama
@@ -76,4 +81,9 @@ urlpatterns = [
     path('profile/member', views.profile_member, name='profile_member'),
     path('profile/edit/<int:member_id>/', views.edit_profile, name='edit_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
+    path('profile/edit/<int:trainer_id>/', views.edit_profile_trainer, name='edit_profile_trainer'),
+    path('profile/change_password_trainer/', views.change_password_trainer, name='change_password_trainer'),
+    
+    # API
+    path('api/', include(router.urls)),
 ]

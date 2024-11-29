@@ -9,7 +9,7 @@ class Trainer(models.Model):
         ('L', 'Laki-laki'),
         ('P', 'Perempuan'),
     ]
-    name = models.TextField(max_length=255)
+    name = models.CharField(max_length=255)
     email = models.EmailField(max_length=255, unique=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     expertise = models.CharField(max_length=100)

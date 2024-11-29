@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'motion', # Aplikasi Motion
     'django_bootstrap5', # Bootstrap
     'widget_tweaks',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

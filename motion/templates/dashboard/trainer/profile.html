@@ -3,23 +3,28 @@
 {% block title %}Profil Saya{% endblock %}
 
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
 <style>
     .trainer-profile-container {
         max-width: 700px;
         margin: 0 auto;
         padding-top: 3rem;
     }
+
     .trainer-profile-card {
         border: none;
         border-radius: 15px;
         overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
     }
+
     .trainer-profile-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
     }
+
     .trainer-header {
         background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
         color: white;
@@ -27,40 +32,48 @@
         text-align: center;
         position: relative;
     }
+
     .trainer-header-content {
         position: relative;
         z-index: 2;
     }
+
     .trainer-avatar {
         width: 120px;
         height: 120px;
         border-radius: 50%;
         object-fit: cover;
-        border: 4px solid rgba(255,255,255,0.3);
+        border: 4px solid rgba(255, 255, 255, 0.3);
         margin-bottom: 1rem;
     }
+
     .trainer-details {
         background-color: #f8f9fa;
         padding: 2rem;
     }
+
     .detail-item {
         margin-bottom: 1.5rem;
         border-bottom: 1px solid #e9ecef;
         padding-bottom: 1rem;
     }
+
     .detail-item:last-child {
         border-bottom: none;
     }
+
     .detail-label {
         color: #6c757d;
         font-weight: 600;
         margin-bottom: 0.5rem;
         display: block;
     }
+
     .detail-value {
         color: #343a40;
         font-size: 1rem;
     }
+
     .expertise-badge {
         background-color: #007bff;
         color: white;
@@ -71,19 +84,21 @@
         margin-bottom: 0.5rem;
         display: inline-block;
     }
+
     .edit-profile-btn {
         position: absolute;
         top: 1rem;
         right: 1rem;
-        background-color: rgba(255,255,255,0.2);
+        background-color: rgba(255, 255, 255, 0.2);
         color: white;
         border: none;
         padding: 0.5rem 1rem;
         border-radius: 0.25rem;
         transition: background-color 0.3s ease;
     }
+
     .edit-profile-btn:hover {
-        background-color: rgba(255,255,255,0.3);
+        background-color: rgba(255, 255, 255, 0.3);
     }
 </style>
 
@@ -99,27 +114,27 @@
                 <p class="text-white-50 mb-0">Pelatih Profesional</p>
             </div>
         </div>
-        
+
         <div class="trainer-details">
             <div class="detail-item">
                 <span class="detail-label">Email</span>
                 <div class="detail-value">{{ trainer.email }}</div>
             </div>
-            
+
             <div class="detail-item">
                 <span class="detail-label">Jenis Kelamin</span>
                 <div class="detail-value">{{ trainer.get_gender_display }}</div>
             </div>
-            
+
             <div class="detail-item">
                 <span class="detail-label">Keahlian</span>
                 <div class="detail-value">
                     {% if trainer.expertise %}
-                        {% for skill in trainer.expertise.split %}
-                            <span class="expertise-badge">{{ skill }}</span>
-                        {% endfor %}
+                    {% for skill in trainer.expertise.split %}
+                    <span class="expertise-badge">{{ skill }}</span>
+                    {% endfor %}
                     {% else %}
-                        <span class="text-muted">Tidak ada keahlian ditentukan</span>
+                    <span class="text-muted">Tidak ada keahlian ditentukan</span>
                     {% endif %}
                 </div>
             </div>
@@ -134,43 +149,154 @@
     </div>
     {% endif %}
 </div>
-
-<!-- Edit Profile Modal -->
-<div class="modal fade" id="editProfileModal" tabindex="-1">
+<!-- Modal Edit Profil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Edit Profil Trainer</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form>
-                    <div class="mb-3">
-                        <label class="form-label">Nama</label>
-                        <input type="text" class="form-control" value="{{ trainer.name }}">
+            <div class="modal-body bg-light">
+                <!-- Form tetap berada di modal-body -->
+                <form id="editProfileForm" method="POST" action="{% url 'edit_profile_trainer' trainer.id %}">
+                    {% csrf_token %}
+                    {% csrf_token %}
+                    {% for field in profile_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" value="{{ trainer.email }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis Kelamin</label>
-                        <select class="form-select">
-                            <option {% if trainer.gender == 'L' %}selected{% endif %} value="L">Laki-laki</option>
-                            <option {% if trainer.gender == 'P' %}selected{% endif %} value="P">Perempuan</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Keahlian</label>
-                        <input type="text" class="form-control" value="{{ trainer.expertise }}">
-                    </div>
+                    {% endfor %}
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary">Simpan Perubahan</button>
+            <div class="modal-footer bg-secondary">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                <!-- Tombol Save Changes tetap terhubung ke form -->
+                <button type="submit" form="editProfileForm" class="btn btn-primary">Simpan Perubahan</button>
             </div>
         </div>
     </div>
 </div>
+
+
+
+
+
+
+<!-- Modal Ubah Password -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Ubah Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changePasswordForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="old_password" class="form-label">Password Lama</label>
+                        <input type="password" class="form-control" id="old_password" name="old_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password1" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control" id="new_password1" name="new_password1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password2" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" id="new_password2" name="new_password2" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Ubah Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add a button to open Change Password Modal -->
+<div class="trainer-details">
+    <div class="detail-item text-center">
+        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+            <i class="fas fa-lock me-2"></i>Ubah Password
+        </button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Edit Profile Form Submission
+        document.querySelector('#editProfileForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const form = event.target;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Profil berhasil diperbarui');
+                        location.reload(); // Reload halaman untuk memperbarui data
+                    } else {
+                        // Display more specific error message if available
+                        const errorMessage = data.errors
+                            ? Object.values(data.errors).flat().join('\n')
+                            : (data.error || 'Terjadi kesalahan');
+                        alert(errorMessage);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan dalam mengirim data');
+                });
+        });
+
+
+
+
+
+        // Change Password Form Submission
+        document.getElementById('changePasswordForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('[name=csrf-token]').getAttribute('content');
+
+            fetch('{% url "change_password_trainer" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Password berhasil diubah');
+                        location.reload();
+                    } else {
+                        alert('Gagal mengubah password: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengubah password');
+                });
+        });
+    });
+</script>
 {% endblock %}
