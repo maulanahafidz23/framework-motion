@@ -1,6 +1,9 @@
 from django import forms
 from .models import Trainer, Membership, Member, FitnessClass, Transaction, AdditionalClass
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+import re
+from django.contrib.auth.forms import PasswordChangeForm
 
 class MembershipsForm(forms.ModelForm):
     class Meta:
@@ -72,11 +75,70 @@ class MembersForm(forms.ModelForm):
             member.save()
         return member
     
+    
+class MemberRegistrationForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['name', 'email', 'phone', 'address']  # Tidak mencantumkan 'membership'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Nama Lengkap'})
+        self.fields['email'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Email'})
+        self.fields['phone'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Nomor Telepon'})
+        self.fields['address'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Alamat Lengkap'})
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if Member.objects.filter(email=email).exists():
+            raise ValidationError("Email sudah digunakan.")
+        return email
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        # Validasi pola nomor telepon
+        if not re.match(r'^\d{10,15}$', phone):
+            raise ValidationError("Nomor telepon harus terdiri dari 10-15 angka.")
+        return phone
+
+    def save(self, commit=True):
+        member = super().save(commit=False)
+        member.membership = None  # Membership default adalah None
+        if commit:
+            member.save()
+        return member
+
+
+class MemberUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['name', 'email', 'phone']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class MemberChangePasswordForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label="Password Lama",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    new_password1 = forms.CharField(
+        label="Password Baru",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+    new_password2 = forms.CharField(
+        label="Konfirmasi Password Baru",
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+
+    
 class FitnessClassForm(forms.ModelForm):
     trainer = forms.ModelChoiceField(queryset=Trainer.objects.all(), required=True)
     class Meta:
         model = FitnessClass
-        fields = ['name', 'trainer', 'schedule', 'price', 'max_participants']
+        fields = ['name', 'trainer', 'schedule', 'price', 'max_participants', 'room']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,59 +1,76 @@
-<form method="POST">
-    {% csrf_token %}
-    <!-- Name Field -->
-    <div class="mb-3">
-        <label for="id_name" class="form-label">Nama</label>
-        <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" 
-               id="id_name" 
-               name="name"
-               value="{{ form.name.value }}" 
-               required>
-        {% if form.name.errors %}
-        <div class="invalid-feedback">{{ form.name.errors }}</div>
-        {% endif %}
-    </div>
+{% block content %}
+<div class="card shadow">
+    <div class="card-body">
+        <form method="POST" action="{% url 'trainer_create' %}">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="id_name" class="form-label">Nama</label>
+                    <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" id="id_name"
+                        name="name" value="{{ form.name.value }}" placeholder="Masukkan nama pelatih">
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.name.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
 
-    <!-- Email Field -->
-    <div class="mb-3">
-        <label for="id_email" class="form-label">Email</label>
-        <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
-               id="id_email" 
-               name="email"
-               value="{{ form.email.value }}" 
-               required>
-        {% if form.email.errors %}
-        <div class="invalid-feedback">{{ form.email.errors }}</div>
-        {% endif %}
-    </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_email" class="form-label">Email</label>
+                    <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                        id="id_email" name="email" value="{{ form.email.value }}" placeholder="Masukkan email pelatih">
+                    {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
 
-    <!-- Gender Field -->
-    <div class="mb-3">
-        <label for="id_gender" class="form-label">Gender</label>
-        <select class="form-control {% if form.gender.errors %}is-invalid{% endif %}" 
-                id="id_gender" 
-                name="gender" 
-                required>
-            <option value="">Pilih Gender</option>
-            <option value="L" {% if trainer.gender == 'L' %}selected{% endif %}>Laki-laki</option>
-            <option value="P" {% if trainer.gender == 'P' %}selected{% endif %}>Perempuan</option>
-        </select>
-        {% if form.gender.errors %}
-        <div class="invalid-feedback">{{ form.gender.errors }}</div>
-        {% endif %}
-    </div>
+                <div class="col-md-6 mb-3">
+                    <label for="id_gender" class="form-label">Gender</label>
+                    <select class="form-select {% if form.gender.errors %}is-invalid{% endif %}" id="id_gender"
+                        name="gender">
+                        <option value="" disabled selected>Pilih Gender</option>
+                        <option value="L" {% if form.gender.value == "L" %}selected{% endif %}>Laki-laki</option>
+                        <option value="P" {% if form.gender.value == "P" %}selected{% endif %}>Perempuan</option>
+                    </select>
 
-    <!-- Expertise Field -->
-    <div class="mb-3">
-        <label for="id_expertise" class="form-label">Keahlian</label>
-        <input type="text" class="form-control {% if form.expertise.errors %}is-invalid{% endif %}" 
-               id="id_expertise" 
-               name="expertise"
-               value="{{ form.expertise.value }}" 
-               required>
-        {% if form.expertise.errors %}
-        <div class="invalid-feedback">{{ form.expertise.errors }}</div>
-        {% endif %}
-    </div>
+                    {% if form.gender.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.gender.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
 
-    <button type="submit" class="btn btn-primary">Update</button>
-</form>
+                <div class="col-md-6 mb-3">
+                    <label for="id_expertise" class="form-label">Keahlian</label>
+                    <input type="text" class="form-control {% if form.expertise.errors %}is-invalid{% endif %}"
+                        id="id_expertise" name="expertise" value="{{ form.expertise.value }}"
+                        placeholder="Masukkan keahlian pelatih">
+                    {% if form.expertise.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.expertise.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Simpan Pelatih
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+
+{% endblock %}

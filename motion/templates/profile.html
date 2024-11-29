@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Saya{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding-top: 3rem;
+    }
+
+    .profile-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: scale(1.03);
+    }
+
+    .profile-header {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        color: #FFF9C4;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .profile-header h2 {
+        color: #FFF9C4;
+        font-weight: 600;
+    }
+
+    .profile-details {
+        background-color: #FFFDE7;
+        padding: 1.5rem;
+    }
+
+    .detail-item {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #E3F2FD;
+        padding-bottom: 0.5rem;
+    }
+
+    .detail-label {
+        color: #1565C0;
+        font-weight: 600;
+    }
+
+    .membership-badge {
+        background-color: #FFC107;
+        color: #1565C0;
+    }
+
+    .btn-edit {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #FFF9C4;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-edit:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .alert-custom {
+        background-color: #E3F2FD;
+        border-color: #2196F3;
+        color: #1565C0;
+    }
+</style>
+
+<head>
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+
+<div class="container profile-container">
+    {% if member %}
+    <div class="card profile-card">
+        <div class="profile-header position-relative">
+            <button class="btn btn-edit" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-edit"></i>
+            </button>
+            <i class="fas fa-user-circle fa-3x mb-3"></i>
+            <h2>{{ member.name }}</h2>
+            <p class="text-white-50">{{ member.membership }} Member</p>
+        </div>
+        <div class="profile-details">
+            <div class="detail-item">
+                <span class="detail-label">Email</span>
+                <p class="mb-0">{{ member.email }}</p>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Nomor Telepon</span>
+                <p class="mb-0">{{ member.phone }}</p>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Status Keanggotaan</span>
+                <p class="mb-0">
+                    <span class="badge membership-badge">
+                        {{ member.membership }}
+                    </span>
+                </p>
+            </div>
+        </div>
+        <button class="btn btn-edit" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+            Edit Profil
+        </button>
+        <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Ganti
+            Password</button>
+
+    </div>
+    {% endif %}
+
+    {% if not member %}
+    <div class="alert alert-custom text-center" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Profil Anda tidak ditemukan
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #2196F3; color: white;">
+                <h5 class="modal-title" id="editProfileModalLabel">Edit Profil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="background-color: #FFFDE7;">
+                <!-- Form tetap berada di modal-body -->
+                <form id="editProfileForm" method="POST" action="{% url 'edit_profile' member.id %}">
+                    {% csrf_token %}
+                    {% for field in profile_form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="modal-footer" style="background-color: #E3F2FD;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+
+                <!-- Tombol Save Changes tetap terhubung ke form dengan atribut form -->
+                <button type="submit" form="editProfileForm" class="btn btn-primary"
+                    style="background-color: #FFC107; border-color: #FFC107; color: #1565C0;">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #2196F3; color: white;">
+                <h5 class="modal-title">Ganti Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background-color: #FFFDE7;">
+                <!-- Form untuk Ganti Password -->
+                <form id="changePasswordForm" method="POST" action="{% url 'change_password' %}">
+                    {% csrf_token %}
+                    {{ password_form.as_p }}
+                </form>
+            </div>
+            <div class="modal-footer" style="background-color: #E3F2FD;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" form="changePasswordForm" class="btn btn-primary"
+                    style="background-color: #FFC107; border-color: #FFC107; color: #1565C0;">Ubah Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.querySelector('#editProfileModal form').addEventListener('submit', function (event) {
+        event.preventDefault(); // Mencegah reload
+        const form = event.target;
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Profil berhasil diperbarui');
+                    location.reload(); // Reload halaman untuk memperbarui data
+                } else {
+                    alert('Terjadi kesalahan: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('changePasswordForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = e.target;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Password Anda telah berhasil diubah.',
+                            icon: 'success',
+                            confirmButtonText: 'Tutup',
+                        }).then(() => {
+                            // Reload halaman untuk memperbarui data
+                            location.reload(); // Reload halaman untuk memperbarui data
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Gagal!',
+                            text: 'Gagal mengubah password: ' + data.error, // Menampilkan pesan error yang dikirim dari server
+                            icon: 'error',
+                            confirmButtonText: 'Tutup',
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengubah password.',
+                        icon: 'error',
+                        confirmButtonText: 'Tutup',
+                    });
+                });
+        });
+    });
+</script>
+{% endblock %}

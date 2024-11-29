@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'motion', # Aplikasi Motion
     'django_bootstrap5', # Bootstrap
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

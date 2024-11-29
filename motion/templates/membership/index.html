@@ -1,77 +1,141 @@
 {% extends 'dashboard/admin/layout.html' %}
 {% block title %} Daftar Membership {% endblock %}
 {% block content %}
-<div class="container">
-    <h1>Daftar Membership</h1>
-    <a href="{% url 'membership_create' %}" class="btn btn-primary mb-3">Tambah Membership</a>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nama</th>
-                <th>Harga</th>
-                <th>Limit</th>
-                <th>Durasi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for membership in memberships %}
-            <tr>
-                <td>{{ membership.name }}</td>
-                <td>Rp. {{ membership.price }}</td>
-                <td>{{ membership.limit }} kelas / perminggu</td>
-                <td>{{ membership.duration }} Hari</td>
-                <td>
-                    <a href="{% url 'membership_update' membership.id %}" class="btn btn-sm btn-warning">Ubah</a>
-                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ membership.id }}')">Hapus</button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Tidak ada data Membership</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function confirmDelete(membershipId) {
-            Swal.fire({
-                title: 'Data membership akan dihapus',
-                text: 'Data tidak akan bisa dikembalikan!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Ini AJAX
-                    fetch(`/membership/delete/${membershipId}`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    }).then(response => {
-                        if (response.ok) {
-                            Swal.fire(
-                                'Deleted!',
-                                'Membership has been deleted.',
-                                'success'
-                            ).then(() => {
-                                // Reload the page after success
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                'There was an issue deleting the membership.',
-                                'error'
-                            );
-                        }
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="bi bi-card-list me-2"></i>Daftar Membership
+                    </h2>
+                    <a href="{% url 'membership_create' %}" class="btn btn-light d-flex align-items-center">
+                        <i class="bi bi-plus-circle me-2"></i>Tambah Membership Baru
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="membershipTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>Nama Membership</th>
+                                    <th>Harga</th>
+                                    <th>Limit Kelas</th>
+                                    <th>Durasi</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for membership in memberships %}
+                                <tr>
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td>
+                                        <span class="fw-bold">{{ membership.name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Rp. {{ membership.price }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ membership.limit }} kelas/minggu</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ membership.duration }} Hari</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'membership_update' membership.id %}" 
+                                               class="btn btn-sm btn-warning d-flex align-items-center" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Edit Membership">
+                                                <i class="bi bi-pencil me-1"></i>Ubah
+                                            </a>
+                                            <button class="btn btn-sm btn-danger d-flex align-items-center" 
+                                                    onclick="confirmDelete('{{ membership.id }}')"
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Hapus Membership">
+                                                <i class="bi bi-trash me-1"></i>Hapus
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <div class="alert alert-info d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Tidak ada data Membership
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include necessary libraries -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function confirmDelete(membershipId) {
+    Swal.fire({
+        title: 'Hapus Membership',
+        html: `
+            <div class="alert alert-warning">
+                <strong>Peringatan!</strong> Data membership akan dihapus permanen.
+            </div>
+            Apakah Anda yakin ingin menghapus membership ini?
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/membership/delete/${membershipId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'Membership telah dihapus.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
                     });
+                } else {
+                    Swal.fire(
+                        'Gagal!',
+                        'Terjadi kesalahan saat menghapus membership.',
+                        'error'
+                    );
                 }
             });
         }
-    </script>
-</div>
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', (event) => {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+</script>
 {% endblock %}

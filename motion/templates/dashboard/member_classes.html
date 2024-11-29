@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelas yang Diikuti</title>
+</head>
+<body>
+    <h1>Kelas yang Diikuti oleh {{ member.name }}</h1>
+    
+    {% if classes %}
+        <ul>
+            {% for class in classes %}
+                <li>
+                    <strong>{{ class.name }}</strong> - {{ class.schedule|date:"d M Y H:i" }} <br>
+                    Trainer: {{ class.trainer.name }} <br>
+                    Harga: Rp {{ class.price }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Belum ada kelas yang diikuti.</p>
+    {% endif %}
+    
+    <a href="/">Kembali ke Home</a>
+</body>
+</html>

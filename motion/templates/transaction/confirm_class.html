@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Kelas | Motion Gym{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<!-- Tambahkan SweetAlert CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+{% endblock %}
+
+{% block content %}
+<h2 class="text-center my-4">Kelas Kebugaran</h2>
+<p class="text-center">Ikuti berbagai kelas kebugaran yang kami tawarkan:</p>
+<div class="row g-4">
+    {% for fitness_class in fitness_classes %}
+    <div class="col-md-4">
+        <div class="card shadow-custom">
+            <img src="{% static 'images/'|add:fitness_class.name|add:'.png' %}" 
+                 class="card-img-top" alt="{{ fitness_class.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ fitness_class.name }}</h5>
+                <p class="card-text">
+                    <strong>Pelatih:</strong> {{ fitness_class.trainer.name }}<br>
+                    <strong>Jadwal:</strong> {{ fitness_class.schedule|date:"l, d M Y H:i" }}<br>
+                    <strong>Harga:</strong> Rp {{ fitness_class.price|floatformat:2 }}<br>
+                    <strong>Kuota:</strong> {{ fitness_class.members.count }} / {{ fitness_class.max_participants }}
+                </p>
+                {% if user.is_authenticated and fitness_class.members.count < fitness_class.max_participants %}
+                <button type="button" 
+                        class="btn btn-primary join-class-btn" 
+                        data-class-id="{{ fitness_class.id }}"
+                        data-class-name="{{ fitness_class.name }}"
+                        data-has-membership="{{ user.member.membership is not None }}"
+                        data-classes-taken="{{ user.member.classes_taken }}"
+                        data-weekly-limit="{{ user.member.membership.limit }}">
+                    Gabung
+                </button>
+                {% else %}
+                <button class="btn btn-secondary" disabled>
+                    {% if fitness_class.members.count >= fitness_class.max_participants %}Penuh{% else %}Gabung{% endif %}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Tambahkan SweetAlert CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const joinButtons = document.querySelectorAll('.join-class-btn');
+
+    joinButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const hasMembership = this.dataset.hasMembership === 'true';
+            const classesTaken = parseInt(this.dataset.classesTaken);
+            const weeklyLimit = parseInt(this.dataset.weeklyLimit);
+            const className = this.dataset.className;
+            const classId = this.dataset.classId;
+
+            // Fungsi untuk menangani permintaan bergabung ke kelas
+            function joinClass() {
+                fetch(`/join_class/${classId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Notifikasi sukses
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Pendaftaran Berhasil!',
+                            text: `Anda berhasil mendaftar kelas ${className}`,
+                            confirmButtonText: 'Tutup'
+                        });
+                    } else if (data.status === 'redirect') {
+                        // Redirect ke halaman pembayaran
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Notifikasi error
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Pendaftaran Gagal',
+                            text: data.message,
+                            confirmButtonText: 'Tutup'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Terjadi Kesalahan',
+                        text: 'Silakan coba lagi.',
+                        confirmButtonText: 'Tutup'
+                    });
+                });
+            }
+
+            // Logika konfirmasi bergabung kelas
+            if (!hasMembership) {
+                // Tidak punya membership
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Pembayaran',
+                    text: `Anda belum memiliki membership. Lanjutkan ke halaman pembayaran kelas ${className}?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Lanjutkan',
+                    cancelButtonText: 'Batalkan'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/transaction/additional_class/${classId}/`;
+                    }
+                });
+            } else if (classesTaken >= weeklyLimit) {
+                // Sudah mencapai limit mingguan
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Pembayaran',
+                    text: `Anda telah mencapai batas kelas mingguan. Lanjutkan ke halaman pembayaran kelas ${className}?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Lanjutkan',
+                    cancelButtonText: 'Batalkan'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/transaction/additional_class/${classId}/`;
+                    }
+                });
+            } else {
+                // Konfirmasi bergabung kelas
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Konfirmasi Pendaftaran',
+                    text: `Apakah Anda yakin ingin mendaftar kelas ${className}?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Daftar',
+                    cancelButtonText: 'Batalkan'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        joinClass();
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

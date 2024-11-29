@@ -10,18 +10,7 @@
 </head>
 
 <body>
-    <div class="container mt-4">
-        <!-- Menampilkan pesan -->
-        {% if messages %}
-        <div>
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+    {% block content %}
 
         <!-- Konten Dashboard Admin -->
         <div class="hero bg-light p-5 rounded-lg m-3">
@@ -31,9 +20,7 @@
             <p>Silakan login terlebih dahulu.</p>
             {% endif %}
         </div>
-    </div>
-
-    {% bootstrap_javascript %}
+    {% endblock %}
 </body>
 
 </html>

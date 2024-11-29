@@ -1,83 +1,102 @@
 {% extends 'dashboard/admin/layout.html' %}
-{% block title %} Daftar Pelatih {% endblock %}
+{% block title %} Daftar Pelatih | Motion Gym {% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Daftar Pelatih</h1>
-    <a href="{% url 'trainer_create' %}" class="btn btn-primary mb-3">Tambah Pelatih</a>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nama</th>
-                <th>Email</th>
-                <th>Gender</th>
-                <th>Keahlian</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for trainer in trainers %}
-            <tr>
-                <td>{{ trainer.name }}</td>
-                <td>{{ trainer.email }}</td>
-                <td>{{ trainer.gender }}</td>
-                <td>{{ trainer.expertise }}</td>
-                <td>
-                    <a href="{% url 'trainer_update' trainer.id %}" class="btn btn-sm btn-warning">Ubah</a>
-                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ trainer.id }}')">Hapus</button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Tidak ada data Pelatih</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3">Daftar Pelatih</h1>
+        <a href="{% url 'trainer_create' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> Tambah Pelatih
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover table-bordered text-center align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Gender</th>
+                        <th>Keahlian</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trainer in trainers %}
+                    <tr>
+                        <td>{{ trainer.name }}</td>
+                        <td>{{ trainer.email }}</td>
+                        <td>{{ trainer.gender }}</td>
+                        <td>{{ trainer.expertise }}</td>
+                        <td>
+                            <a href="{% url 'trainer_update' trainer.id %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Ubah
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ trainer.id }}')">
+                                <i class="fas fa-trash-alt"></i> Hapus
+                            </button>
+
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Tidak ada data pelatih</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 Integration -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function confirmDelete(trainerId) {
             Swal.fire({
-                title: 'Data Pelatih akan dihapus',
-                text: 'Data tidak akan bisa dikembalikan!',
+                title: 'Hapus Data Pelatih?',
+                text: 'Data ini tidak dapat dikembalikan setelah dihapus!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus!'
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Ini AJAX
-                    fetch(`/trainer/delete/${trainerId}`, {
+                    // Kirim request untuk menghapus pelatih
+                    fetch(`/trainer/delete/${trainerId}/`, {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': '{{ csrf_token }}',
                             'Content-Type': 'application/json',
-                        }
+                        },
                     }).then(response => {
-                        return response.json().then(data => ({ status: response.status, body: data }));
-                    }).then(({ status, body }) => {
-                        if (status === 200) {
+                        console.log(response);  // Tambahkan ini untuk mengecek respons dari server
+                        if (response.ok) {
                             Swal.fire(
-                                'Deleted!',
-                                'Trainer has been deleted.',
+                                'Berhasil!',
+                                'Data pelatih telah dihapus.',
                                 'success'
                             ).then(() => {
                                 window.location.reload();
                             });
                         } else {
-                            Swal.fire(
-                                'Error!',
-                                body.error || 'There was an issue deleting the trainer.',
-                                'error'
-                            );
+                            response.json().then(data => {
+                                Swal.fire(
+                                    'Gagal!',
+                                    data.error || 'Ada masalah dalam menghapus data.',
+                                    'error'
+                                );
+                            });
                         }
-                    }).catch(error => {
+                    }).catch(() => {
                         Swal.fire(
                             'Error!',
-                            'There was a network issue.',
+                            'Ada masalah pada jaringan.',
                             'error'
                         );
                     });
-
                 }
             });
         }

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Riwayat Transaksi{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h1 class="text-center mb-5">Riwayat Transaksi</h1>
+
+    <!-- Transaksi Membership -->
+    <div class="mb-5">
+        <h3 class="mb-3 text-primary">Transaksi Membership</h3>
+        {% if membership_transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th>#</th>
+                        <th>Membership</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
+                        <th>Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in membership_transactions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ transaction.membership.name }}</td>
+                        <td>Rp {{ transaction.amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge 
+                                    {% if transaction.status == 'Pending' %}
+                                        bg-warning text-dark
+                                    {% elif transaction.status == 'Paid' %}
+                                        bg-success
+                                    {% elif transaction.status == 'Failed' %}
+                                        bg-danger
+                                    {% endif %}">
+                                {{ transaction.status }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.create_date|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Tidak ada transaksi membership.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Transaksi Kelas Tambahan -->
+    <div class="mb-5">
+        <h3 class="mb-3 text-success">Transaksi Kelas Tambahan</h3>
+        {% if additional_class_transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-success">
+                    <tr>
+                        <th>#</th>
+                        <th>Kelas</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
+                        <th>Tanggal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in additional_class_transactions %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ transaction.fit_class.name }}</td>
+                        <td>Rp {{ transaction.price|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge 
+                                    {% if transaction.status == 'Pending' %}
+                                        bg-warning text-dark
+                                    {% elif transaction.status == 'Paid' %}
+                                        bg-success
+                                    {% else %}
+                                        bg-danger
+                                    {% endif %}">
+                                {{ transaction.status }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.date|date:"d M Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            Tidak ada transaksi kelas tambahan.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tombol Kembali -->
+    <div class="text-center mt-5">
+        <a href="/" class="btn btn-secondary btn-lg">
+            <i class="bi bi-house-door"></i> Home
+        </a>
+    </div>
+</div>
+{% endblock %}

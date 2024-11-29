@@ -8,6 +8,18 @@
     <p class="text-center">Lengkapi formulir berikut untuk membeli membership <strong>{{ membership.name }}</strong>.
     </p>
 
+    <!-- Informasi Pembayaran -->
+    <div class="alert alert-info mb-4">
+        <h5 class="alert-heading">Petunjuk Pembayaran:</h5>
+        <p class="mb-0">Silakan transfer ke rekening berikut:</p>
+        <ul class="mb-0">
+            <li>Bank XYZ</li>
+            <li>No. Rekening: 1234-5678-9012</li>
+            <li>Atas Nama: Motion Gym</li>
+        </ul>
+        <p class="mt-2 mb-0">Nominal: <strong>Rp {{ membership.price|floatformat:2 }}</strong></p>
+    </div>
+
     <!-- Informasi Member -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-primary text-white">
@@ -36,5 +48,6 @@
         <button type="submit" class="btn btn-primary">Konfirmasi</button>
         <a href="{% url 'membership_list' %}" class="btn btn-secondary">Kembali</a>
     </form>
+
 </div>
 {% endblock %}

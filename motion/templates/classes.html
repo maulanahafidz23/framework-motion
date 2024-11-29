@@ -1,42 +1,207 @@
 {% extends 'base.html' %}
-
-<<<<<<< HEAD
 {% load static %}
-
-=======
->>>>>>> 3b6734edb90d6e447b71ac8e82b767e9d66e1208
 {% block title %}Kelas | Motion Gym{% endblock %}
-
 {% block content %}
-<h2>Kelas Kebugaran</h2>
-<p>Ikuti berbagai kelas kebugaran yang kami tawarkan:</p>
-<div class="row g-4">
-<<<<<<< HEAD
-    {% for fitness_class in fitness_classes %}
-    <div class="col-md-4">
-        <div class="card shadow-custom">
-            <!-- Gambar dinamis berdasarkan nama kelas -->
-            <img src="{% static 'images/'|add:fitness_class.name|add:'.png' %}" 
-                 class="card-img-top" alt="{{ fitness_class.name }}">
-            <div class="card-body">
-                <h5 class="card-title">{{ fitness_class.name }}</h5>
-                <p class="card-text">
-                    <strong>Pelatih:</strong> {{ fitness_class.trainer.name }}<br>
-                    <strong>Jadwal:</strong> {{ fitness_class.schedule|date:"l, d M Y H:i" }}<br>
-                    <strong>Harga:</strong> Rp {{ fitness_class.price|floatformat:2 }}<br>
-                    <strong>Kuota:</strong> {{ fitness_class.members.count }} / {{ fitness_class.max_participants }}
-                </p>
-                {% if user.is_authenticated and fitness_class.members.count < fitness_class.max_participants %}
-                <form action="" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">Gabung</button>
-                </form>
-                {% else %}
-                <button class="btn btn-secondary" disabled>
-                    {% if fitness_class.members.count >= fitness_class.max_participants %}Penuh{% else %}Gabung{% endif %}
-                </button>
-                {% endif %}
+<div class="container-fluid px-4 py-5">
+    <div class="text-center mb-5">
+        <h2 class="display-6 fw-bold text-primary">Kelas Kebugaran Motion Gym</h2>
+        <p class="lead text-muted">Temukan kelas yang sesuai dengan kebutuhan dan tujuan kebugaran Anda</p>
+    </div>
+
+    <!-- Filter, Sorting, dan Search -->
+    <div class="row mb-4 justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex gap-3 justify-content-center">
+                <!-- Sorting Dropdown -->
+                <select id="sortKelas" class="form-select w-auto">
+                    <option value="terbaru">Terbaru</option>
+                    <option value="harga-terendah">Harga Terendah</option>
+                    <option value="kuota-tersedia">Kuota Tersedia</option>
+                </select>
+
+                <!-- Search Input -->
+                <div class="input-group">
+                    <input type="text" id="searchKelas" class="form-control" placeholder="Cari kelas...">
+                    <button class="btn btn-primary" type="button" id="btnSearchKelas">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    {% endfor %}
+
+    <!-- Grid Kelas -->
+    <div id="kelasContainer" class="row g-4">
+        {% for fitness_class in fitness_classes %}
+        <div class="col-md-4 kelas-item" 
+             data-kategori="{{ fitness_class.category }}" 
+             data-harga="{{ fitness_class.price }}"
+             data-kuota="{{ fitness_class.max_participants }}"
+             data-nama="{{ fitness_class.name|lower }}"
+             data-trainer="{{ fitness_class.trainer.name|lower }}">
+            <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden hover-lift">
+                <div class="position-relative">
+                    <img src="{% static 'images/'|add:fitness_class.name|add:'.png' %}"
+                         class="card-img-top object-fit-cover" 
+                         alt="{{ fitness_class.name }}"
+                         style="height: 250px;">
+                    <div class="position-absolute top-0 end-0 m-3 
+                                {% if fitness_class.members.count >= fitness_class.max_participants %}
+                                    bg-danger
+                                {% else %}
+                                    bg-success
+                                {% endif %} 
+                                text-white px-2 py-1 rounded-pill">
+                        {{ fitness_class.members.count }}/{{ fitness_class.max_participants }}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">{{ fitness_class.name }}</h5>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span><i class="bi bi-person-fill"></i> {{ fitness_class.trainer.name }}</span>
+                            <span><i class="bi bi-clock-fill"></i> {{ fitness_class.schedule|date:"l, H:i" }}</span>
+                        </div>
+                        <div class="mt-2 text-center h4 text-primary fw-bold">
+                            Rp {{ fitness_class.price|floatformat:2 }}
+                        </div>
+                    </div>
+                    {% if user.is_authenticated and fitness_class.members.count < fitness_class.max_participants %}
+                    <button type="button" 
+                            class="btn btn-primary w-100 btn-daftar"
+                            data-class-id="{{ fitness_class.id }}"
+                            data-class-name="{{ fitness_class.name }}">
+                        <i class="bi bi-plus-circle me-2"></i>Gabung Kelas
+                    </button>
+                    {% else %}
+                    <button class="btn btn-secondary w-100" disabled>
+                        {% if fitness_class.members.count >= fitness_class.max_participants %}
+                            <i class="bi bi-lock-fill me-2"></i>Kelas Penuh
+                        {% else %}
+                            <i class="bi bi-lock-fill me-2"></i>Gabung
+                        {% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResultsMessage" class="text-center mt-5" style="display: none;">
+        <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+        <h4 class="mt-3">Tidak ada kelas yang ditemukan</h4>
+        <p class="text-muted">Coba ubah kata kunci pencarian atau filter Anda</p>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi -->
+<div class="modal fade" id="konfirmasiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0">
+                <h5 class="modal-title fw-bold">Konfirmasi Pendaftaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-question-circle text-primary" style="font-size: 4rem;"></i>
+                </div>
+                <p class="lead">Anda yakin ingin mendaftar kelas <span id="namaKelaskonfirmasi" class="fw-bold text-primary"></span>?</p>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="#" class="btn btn-primary" id="linkDaftarKelas">Ya, Daftar</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tangani pendaftaran kelas (Unchanged from previous version)
+    const tombolDaftar = document.querySelectorAll('.btn-daftar');
+    tombolDaftar.forEach(tombol => {
+        tombol.addEventListener('click', function() {
+            const classId = this.getAttribute('data-class-id');
+            const className = this.getAttribute('data-class-name');
+           
+            document.getElementById('namaKelaskonfirmasi').textContent = className;
+            const linkDaftar = document.getElementById('linkDaftarKelas');
+            linkDaftar.href = `/join-class/${classId}/`;
+           
+            var konfirmasiModal = new bootstrap.Modal(document.getElementById('konfirmasiModal'));
+            konfirmasiModal.show();
+        });
+    });
+
+    // Sorting dan Searching
+    const sortSelect = document.getElementById('sortKelas');
+    const searchInput = document.getElementById('searchKelas');
+    const btnSearch = document.getElementById('btnSearchKelas');
+    const kelasContainer = document.getElementById('kelasContainer');
+    const kelasItems = Array.from(document.querySelectorAll('.kelas-item'));
+    const noResultsMessage = document.getElementById('noResultsMessage');
+
+    function updateKelas() {
+        const sortValue = sortSelect.value;
+        const searchValue = searchInput.value.toLowerCase().trim();
+
+        let filteredItems = kelasItems.filter(item => {
+            const matchesSearch = searchValue === '' || 
+                item.getAttribute('data-nama').includes(searchValue) || 
+                item.getAttribute('data-trainer').includes(searchValue);
+            
+            return matchesSearch;
+        });
+
+        // Sorting logic
+        switch(sortValue) {
+            case 'harga-terendah':
+                filteredItems.sort((a, b) => 
+                    parseFloat(a.getAttribute('data-harga')) - 
+                    parseFloat(b.getAttribute('data-harga'))
+                );
+                break;
+            case 'kuota-tersedia':
+                filteredItems.sort((a, b) => 
+                    parseInt(b.querySelector('.rounded-pill').textContent.split('/')[1]) - 
+                    parseInt(a.querySelector('.rounded-pill').textContent.split('/')[1])
+                );
+                break;
+            default: // terbaru
+                filteredItems.reverse();
+        }
+
+        // Hapus semua item dan tambahkan kembali sesuai urutan
+        kelasContainer.innerHTML = '';
+        filteredItems.forEach(item => kelasContainer.appendChild(item));
+
+        // Tampilkan/sembunyikan pesan tidak ada hasil
+        if (filteredItems.length === 0) {
+            noResultsMessage.style.display = 'block';
+        } else {
+            noResultsMessage.style.display = 'none';
+        }
+    }
+
+    // Event listeners untuk sort dan search
+    sortSelect.addEventListener('change', updateKelas);
+    searchInput.addEventListener('input', updateKelas);
+    btnSearch.addEventListener('click', updateKelas);
+
+    // Memungkinkan pencarian saat tekan Enter
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            updateKelas();
+        }
+    });
+});
+
+</script>
+{% endblock %}

@@ -1,51 +1,120 @@
 {% extends 'dashboard/admin/layout.html' %}
-{% block title %} Daftar Transaksi {% endblock %}
+{% block title %} Daftar Transaksi | Motion Gym {% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Daftar Transaksi</h1>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Anggota</th>
-                <th>Membership</th>
-                <th>Kelas</th>
-                <th>Jumlah</th>
-                <th>Status</th>
-                <th>Tanggal</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transaction in transactions %}
-            <tr>
-                <td>{{ transaction.member.name }}</td>
-                <td>
-                    {% if transaction.membership %}
-                    {{ transaction.membership.name }}
-                    {% else %}
-                    Tidak ada
-                    {% endif %}
-                </td>
-                <td>
-                    {% if transaction.class_booking %}
-                    {{ transaction.class_booking.name }}
-                    {% else %}
-                    Tidak ada
-                    {% endif %}
-                </td>
-                <td>Rp {{ transaction.amount }}</td>
-                <td>{{ transaction.status }}</td>
-                <td>{{ transaction.create_date|date:"d M Y, H:i" }}</td>
-                <td>
-                    <a href="{% url 'transaction_update' transaction.id %}" class="btn btn-sm btn-warning">Ubah</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="text-center">Tidak ada data Transaksi</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Daftar Transaksi</h1>
+    
+    <!-- Tabel Transaksi Membership -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="card-title mb-0">Transaksi Membership</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Anggota</th>
+                        <th>Membership</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
+                        <th>Tanggal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.member.name }}</td>
+                        <td>
+                            {% if transaction.membership %}
+                                {{ transaction.membership.name }}
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Tidak ada</span>
+                            {% endif %}
+                        </td>
+                        <td>Rp {{ transaction.amount }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if transaction.status == 'Paid' %}
+                                    bg-success
+                                {% elif transaction.status == 'Pending' %}
+                                    bg-warning text-dark
+                                {% else %}
+                                    bg-danger
+                                {% endif %}">
+                                {{ transaction.status }}
+                            </span>
+                        </td>
+                        <td>{{ transaction.create_date|date:"d M Y" }}</td>
+                        <td>
+                            <a href="{% url 'transaction_update' transaction.id %}" 
+                               class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Ubah
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Tidak ada data transaksi membership</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tabel Transaksi Additional Class -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="card-title mb-0">Transaksi Additional Class</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Anggota</th>
+                        <th>Kelas</th>
+                        <th>Jumlah</th>
+                        <th>Status</th>
+                        <th>Tanggal</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for additional in additional_classes %}
+                    <tr>
+                        <td>{{ additional.member.name }}</td>
+                        <td>{{ additional.fit_class.name }}</td>
+                        <td>Rp {{ additional.price }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if additional.status == 'Paid' %}
+                                    bg-success
+                                {% elif additional.status == 'Pending' %}
+                                    bg-warning text-dark
+                                {% else %}
+                                    bg-danger
+                                {% endif %}">
+                                {{ additional.status }}
+                            </span>
+                        </td>
+                        <td>{{ additional.date|date:"d M Y" }}</td>
+                        <td>
+                            <a href="{% url 'update_additional_class' additional.id %}" 
+                               class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Ubah
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Tidak ada data transaksi additional class</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Pembayaran Kelas Tambahan | Motion Gym{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Pembayaran Kelas Tambahan</h2>
+    
+    <!-- Informasi Pembayaran -->
+    <div class="alert alert-info mb-4">
+        <h5 class="alert-heading">Petunjuk Pembayaran:</h5>
+        <p class="mb-0">Silakan transfer ke rekening berikut:</p>
+        <ul class="mb-0">
+            <li>Bank XYZ</li>
+            <li>No. Rekening: 1234-5678-9012</li>
+            <li>Atas Nama: Motion Gym</li>
+        </ul>
+        <p class="mt-2 mb-0">Nominal: <strong>Rp {{ fitness_class.price|floatformat:2 }}</strong></p>
+    </div>
+
+    <!-- Informasi Kelas -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Detail Kelas</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>Nama Kelas:</strong> {{ fitness_class.name }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Pelatih:</strong> {{ fitness_class.trainer.name }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Jadwal:</strong> {{ fitness_class.schedule|date:"d M Y, H:i" }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Harga:</strong> Rp {{ fitness_class.price|floatformat:2 }}
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Formulir Upload Bukti Pembayaran -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Upload Bukti Pembayaran</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="payment_proof" class="form-label">Bukti Transfer <span class="text-danger">*</span></label>
+                    <input type="file" 
+                           class="form-control" 
+                           id="payment_proof" 
+                           name="payment_proof" 
+                           accept="image/*"
+                           required>
+                    <div class="form-text">
+                        Format yang diterima: JPG, PNG, atau PDF. Maksimal ukuran file: 2MB
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        Upload Bukti Pembayaran
+                    </button>
+                    <a href="{% url 'fitness_class_list' %}" class="btn btn-secondary">
+                        Kembali ke Daftar Kelas
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Informasi Tambahan -->
+    <div class="alert alert-warning">
+        <h5 class="alert-heading">Penting!</h5>
+        <p class="mb-0">Setelah upload bukti pembayaran, mohon tunggu verifikasi dari admin. 
+        Status pembayaran dapat Anda cek di halaman riwayat transaksi.</p>
+    </div>
+</div>
+{% endblock %}

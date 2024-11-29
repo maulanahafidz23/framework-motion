@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Kelas yang Diikuti{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Kelas yang anda ikuti {{ member.name }}</h1>
+
+    {% if classes %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for class in classes %}
+            <div class="col">
+                <div class="card shadow-sm">
+                    <!-- Mengambil gambar dengan nama kelas, seperti pada kode sebelumnya -->
+                    <img src="{% static 'images/'|add:class.name|add:'.png' %}" class="card-img-top" alt="{{ class.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ class.name }}</h5>
+                        <p class="card-text">
+                            <strong>Trainer:</strong> {{ class.trainer.name }}<br>
+                            <strong>Jadwal:</strong> {{ class.schedule|date:"d M Y | H:i" }}<br>
+                            <strong>Ruangan :</strong> {{ class.room }}<br>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            Belum ada kelas yang diikuti.
+        </div>
+    {% endif %}
+    
+    <div class="text-center mt-5">
+        <a href="/" class="btn btn-secondary btn-lg">
+            <i class="bi bi-house-door"></i> Home
+        </a>
+    </div>
+</div>
+{% endblock %}

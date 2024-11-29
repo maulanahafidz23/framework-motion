@@ -3,6 +3,8 @@ from django.contrib.auth.models import Group, User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from datetime import timedelta
 
 class Member(models.Model):
     name = models.CharField(max_length=255)
@@ -11,15 +13,36 @@ class Member(models.Model):
     address = models.TextField()
     membership = models.ForeignKey('Membership', on_delete=models.SET_NULL, null=True, blank=True)
     classes_taken = models.IntegerField(default=0) # untuk menyimpan data kelas yang telah diambil perminggu
+    last_reset = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
     
+    def reset_classes_if_needed(self):
+        """Reset classes_taken jika sudah lewat seminggu"""
+        now = timezone.now()
+        week_ago = self.last_reset + timedelta(days=7)
+        
+        if now >= week_ago:
+            self.classes_taken = 0
+            self.last_reset = now
+            self.save()
+    
     def can_take_class(self):
+        """
+        Memeriksa apakah member masih bisa mengambil kelas
+        Returns:
+            bool: True jika member bisa mengambil kelas, False jika tidak
+        """
+        # Reset counter mingguan jika diperlukan
+        self.reset_classes_if_needed()
+        
         if self.membership:
-            # Periksa jika member sudah mencapai batas kelas
-            return self.classes_taken < self.membership.max_classes_per_week
-        return True  # Member tanpa membership bisa ikut kelas tambahan
+            # Member dengan membership harus di bawah limit
+            return self.classes_taken < self.membership.limit
+        
+        # Member tanpa membership selalu perlu bayar
+        return False
         
 # Signal to create a User when a Member is created
 @receiver(post_save, sender=Member)

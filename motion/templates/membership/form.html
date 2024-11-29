@@ -1,33 +1,143 @@
-<form method="POST">
+<form method="POST" class="membership-form needs-validation" novalidate>
     {% csrf_token %}
-    <!-- Name Field -->
-    <div class="mb-3">
-        <label for="id_name" class="form-label">Nama</label>
-        <input type="text" class="form-control" id="id_name" name="name"
-            value="{{ form.name.value|default_if_none:'' }}" required>
-        <div class="invalid-feedback">{{ form.name.errors }}</div>
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0 text-center">
+                <i class="bi bi-plus-circle me-2"></i>Form Membership Baru
+            </h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Name Field -->
+            <div class="mb-4">
+                <div class="form-floating">
+                    <input type="text" 
+                           class="form-control" 
+                           id="id_name" 
+                           name="name"
+                           placeholder="Masukkan nama membership"
+                           value="{{ form.name.value|default_if_none:'' }}" 
+                           required>
+                    <label for="id_name">Nama Membership</label>
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Price Field -->
+            <div class="mb-4">
+                <div class="form-floating">
+                    <input type="number" 
+                           class="form-control" 
+                           id="id_price" 
+                           name="price"
+                           placeholder="Masukkan harga membership"
+                           value="{{ form.price.value|default_if_none:'' }}" 
+                           required 
+                           min="0">
+                    <label for="id_price">Harga (Rp)</label>
+                    {% if form.price.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.price.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Limit Field -->
+            <div class="mb-4">
+                <div class="form-floating">
+                    <input type="number" 
+                           class="form-control" 
+                           id="id_limit" 
+                           name="limit"
+                           placeholder="Masukkan limit kelas per minggu"
+                           value="{{ form.limit.value|default_if_none:'' }}" 
+                           required 
+                           min="1">
+                    <label for="id_limit">Limit Kelas Per Minggu</label>
+                    {% if form.limit.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.limit.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Duration Field -->
+            <div class="mb-4">
+                <div class="form-floating">
+                    <input type="number" 
+                           class="form-control" 
+                           id="id_duration" 
+                           name="duration"
+                           placeholder="Masukkan durasi membership"
+                           value="{{ form.duration.value|default_if_none:'' }}" 
+                           required 
+                           min="1">
+                    <label for="id_duration">Durasi (Hari)</label>
+                    {% if form.duration.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.duration.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-save me-2"></i>Simpan Membership
+                </button>
+            </div>
+        </div>
     </div>
-    <!-- Price Field -->
-    <div class="mb-3">
-        <label for="id_price" class="form-label">Harga</label>
-        <input type="number" class="form-control" id="id_price" name="price" step="0.01"
-            data-inputmask="'alias': 'numeric', 'groupSeparator': ',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': '$ ', 'placeholder': '0'"
-            value="{{form.price.value|default_if_none:'' }}" required>
-        <div class="invalid-feedback">{{ form.price.errors }}</div>
-    </div>
-    <!-- Limit Field -->
-    <div class="mb-3">
-        <label for="id_limit" class="form-label">Limit Per Minggu</label>
-        <input type="number" class="form-control" id="id_limit" name="limit"
-            value="{{form.limit.value|default_if_none:'' }}" required>
-        <div class="invalid-feedback">{{ form.limit.errors }}</div>
-    </div>
-    <!-- Duration Field -->
-    <div class="mb-3">
-        <label for="id_duration" class="form-label">Durasi</label>
-        <input type="text" class="form-control" id="id_duration" name="duration"
-            value="{{ form.duration.value|default_if_none:'' }}" required>
-        <div class="invalid-feedback">{{ form.duration.errors }}</div>
-    </div>
-    <button type="submit" class="btn btn-primary">Simpan</button>
 </form>
+
+<script>
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+
+<style>
+.membership-form .form-floating > label {
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.membership-form .form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    border-color: #0d6efd;
+}
+
+.membership-form .card-header {
+    background: linear-gradient(to right, #0d6efd, #6a11cb);
+}
+
+.membership-form .btn-primary {
+    background: linear-gradient(to right, #0d6efd, #6a11cb);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.membership-form .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+</style>

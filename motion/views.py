@@ -1,16 +1,19 @@
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib import messages
-from .forms import MembershipsForm, TrainersForm, MembersForm, FitnessClassForm, TransactionForm
-from django.contrib.auth.models import User, Group
+from .forms import MemberChangePasswordForm, MembershipsForm, TrainersForm, MembersForm, FitnessClassForm, TransactionForm, MemberRegistrationForm, MemberUpdateForm
 from .models import Trainer, Membership, Member, FitnessClass, Transaction, AdditionalClass
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponseForbidden
-from django.db.models import Count
-from django.views.generic import ListView
+from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
+import os
+from .decorators import admin_required
 
-# Create your views here.
+
+### ---   PUBLIK   --- ###
+
 def home(request):
     return render(request, 'home.html')
 
@@ -29,7 +32,31 @@ def classes(request):
 def about(request):
     return render(request, 'about.html')
 
-# * DASHBOARD
+def fitnes_class_list(request):
+    fitness_classes = FitnessClass.objects.all()
+    return render(request, 'classes.html', {'fitness_classes': fitness_classes})
+
+def register_member(request):
+    if request.method == 'POST':
+        form = MemberRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Registrasi berhasil! Silakan login.")
+            return redirect('login')  # Ganti dengan URL halaman login Anda
+        else:
+            messages.error(request, "Ada kesalahan dalam pengisian form.")
+    else:
+        form = MemberRegistrationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+def membership_list(request):
+    memberships = Membership.objects.all()
+    return render(request, 'membership.html', {'memberships': memberships})
+
+
+
+### ---   DASHBOARD   --- ###
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -47,7 +74,7 @@ def dashboard_admin(request):
 
 @login_required
 def dashboard_trainer(request):
-    return render(request, 'dashboard/trainer.html')
+    return render(request, 'dashboard/trainer/trainer.html')
 
 def logout_view(request):
     if request.method == 'POST':
@@ -55,249 +82,85 @@ def logout_view(request):
         return redirect('login')
     else:
         return HttpResponseForbidden("Invalid request method.")
-
-
-# Autentikasi untuk menu tambahan di Navbar
-def your_view(request):
-    # Pastikan user sudah login
-    if request.user.is_authenticated:
-        # Debug: print untuk mengecek group user
-        print("User Groups:", request.user.groups.all())
+    
+    
+### ---   TRAINER   --- ###
         
-        is_member = request.user.groups.filter(name='Member').exists()
-        # Debug: print status member
-        print("Is Member:", is_member)
-    else:
-        is_member = False
+@login_required
+def profile_trainer(request):
+    try:
+        trainer = Trainer.objects.get(email=request.user.email)
+    except Trainer.DoesNotExist:
+        trainer = None
 
-    context = {
-        'is_member': is_member,
-    }
-    return render(request, 'includes/navbar.html', context)
+    return render(request, 'dashboard/trainer/profile.html', {'trainer': trainer})
 
+@login_required
+def trainer_classes(request):
+    # Pastikan user adalah trainer
+    try:
+        trainer = Trainer.objects.get(email=request.user.email)
+    except Trainer.DoesNotExist:
+        return render(request, 'error.html', {'message': 'Anda bukan trainer.'})
 
-# READ Membership
-def membership_index(request):
-    memberships = Membership.objects.all()
-    return render(request, 'membership/index.html', {'memberships': memberships})
-    
-# View untuk halaman Member
-def membership_list(request):
-    memberships = Membership.objects.all()
-    return render(request, 'membership.html', {'memberships': memberships})
+    # Ambil semua kelas
+    all_classes = FitnessClass.objects.all()
 
-#CREATE Membership
-def membership_create(request):
-    if request.method == 'POST':
-        form = MembershipsForm(request.POST)
-        if form.is_valid():
-            form.save() # Simpan data membership ke database
-            messages.success(request, 'Membership berhasil dibuat!') # Pesan sukses
-            return redirect('membership_index') # Redirect ke halaman index membership
-    else:
-        form = MembershipsForm()
-    return render(request, 'membership/create.html', {'form': form})
+    # Ambil kelas yang dia ajar
+    my_classes = FitnessClass.objects.filter(trainer=trainer)
 
-# UPDATE Membership
-def membership_update(request, membership_id):
-    membership = get_object_or_404(Membership, id=membership_id)
-    if request.method == 'POST':
-        form = MembershipsForm(request.POST, instance=membership)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Data membership berhasil diubah!')
-            return redirect('membership_index')
-    else:
-        form = MembershipsForm(instance=membership)
-    return render(request, 'membership/update.html', {'form': form, 'membership': membership})
-
-# DELETE Membership
-def membership_delete(request, membership_id):
-    membership = get_object_or_404(Membership, id=membership_id)
-    membership.delete()
-    messages.success(request, 'Data membership berhasil dihapus')
-    return JsonResponse({'success': True})
-
-
-
-# READ Trainer
-def trainer_index(request):
-    trainers = Trainer.objects.all()
-    return render(request, 'trainer/index.html', {'trainers': trainers})
-
-# CREATE Trainer
-def trainer_create(request):
-    if request.method == 'POST':
-        form = TrainersForm(request.POST)
-        if form.is_valid():
-            form.save()  # Simpan data trainer ke database
-            messages.success(request, 'Trainer berhasil dibuat!')  # Pesan sukses
-            return redirect('trainer_index')  # Redirect ke halaman index trainer
-        else:
-            messages.error(request, 'Ada kesalahan dalam pengisian form.')
-    else:
-        form = TrainersForm()
-    return render(request, 'trainer/create.html', {'form': form})
-
-# UPDATE Trainer
-def trainer_update(request, trainer_id):
-    trainer = get_object_or_404(Trainer, id=trainer_id)
-    
-    if request.method == 'POST':
-        form = TrainersForm(request.POST, instance=trainer)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Data Pelatih berhasil diubah!')
-            return redirect('trainer_index')  # Redirect setelah berhasil
-    else:
-        form = TrainersForm(instance=trainer)  # Form untuk method GET
-    
-    return render(request, 'trainer/update.html', {'form': form, 'trainer': trainer})
-        
-# DELETE Trainer
-def trainer_delete(request, trainer_id):
-    trainer = get_object_or_404(Trainer, id=trainer_id)
-    trainer.delete()
-    messages.success(request, 'Data trainer berhasil dihapus')
-    return JsonResponse({'success': True})
-
-
-
-# READ Member 
-def member_index(request):
-    members = Member.objects.all()
-    return render(request, 'member/index.html', {'members': members})
-
-# CREATE Member
-def member_create(request):
-    if request.method == 'POST':
-        form = MembersForm(request.POST)
-        if form.is_valid():
-            form.save()  # Simpan data member ke database
-            messages.success(request, 'Member berhasil dibuat!')  # Pesan sukses
-            return redirect('member_index')  # Redirect ke halaman index Member
-        else:
-            messages.error(request, 'Ada kesalahan dalam pengisian form.')
-    else:
-        form = MembersForm()
-    return render(request, 'member/create.html', {'form': form})
-
-# UPDATE Member
-def member_update(request, member_id):
-    member = get_object_or_404(Member, id=member_id)
-    if request.method == 'POST':
-        form = MembersForm(request.POST, instance=member)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Member berhasil diperbarui!')
-            return redirect('member_index')
-    else:
-        form = MembersForm(instance=member)
-
-    return render(request, 'member/update.html', {'form': form, 'member': member})
-
-# DELETE Member
-def member_delete(request, member_id):
-    membership = get_object_or_404(Member, id=member_id)
-    membership.delete()
-    messages.success(request, 'Data anggota berhasil dihapus')
-    return JsonResponse({'success': True})
-
-
-
-# READ Class
-def fitness_class_index(request):
-    fitness_classes  = FitnessClass.objects.all()  # Mengambil data kelas fitness
-    return render(request, 'class/index.html', {'fitness_classes': fitness_classes })
-
-def fitnes_class_list(request):
-    fitness_classes = FitnessClass.objects.all()
-    return render(request, 'classes.html', {'fitness_classes': fitness_classes})
-
-# CREATE Class
-def fitness_class_create(request):
-    if request.method == 'POST':
-        form = FitnessClassForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Kelas berhasil dibuat!')
-            return redirect('fitness_class_index')
-        else:
-            messages.error(request, 'Ada kesalahan dalam form, silakan periksa kembali.')
-    else:
-        form = FitnessClassForm()
-    return render(request, 'class/create.html', {'form': form})
-
-# UPDATE GymClass
-def fitness_class_update(request, pk):
-    fitness_class = get_object_or_404(FitnessClass, pk=pk)
-    if request.method == 'POST':
-        form = FitnessClassForm(request.POST, instance=fitness_class)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Kelas fitness berhasil diupdate!')
-            return redirect('fitness_class_index')
-        else:
-            messages.error(request, 'Ada kesalahan dalam form, silakan periksa kembali.')
-    else:
-        form = FitnessClassForm(instance=fitness_class)
-    return render(request, 'class/update.html', {'form': form})
-
-# DELETE GymClass
-def fitness_class_delete(request, pk):
-    gymclass = get_object_or_404(FitnessClass, pk=pk)
-    gymclass.delete()  
-    messages.success(request, 'Kelas berhasil dihapus')
-    return JsonResponse({'success': True})
-
-
-# Transaction Membership
-
-#def create_transaction(request, membership_id):
-    # Hanya Member yang bisa melakukan transaksi
-    if not hasattr(request.user, 'member'):
-        messages.error(request, "Hanya member yang dapat melakukan transaksi.")
-        return redirect('membership_list')
-
-    # Dapatkan data membership berdasarkan ID
-    membership = get_object_or_404(Membership, id=membership_id)
-
-    if request.method == 'POST':
-        form = TransactionForm(request.POST, request.FILES)
-        if form.is_valid():
-            transaction = form.save(commit=False)
-            transaction.member = request.user.member  # Set member berdasarkan user yang login
-            transaction.membership = membership
-            transaction.status = 'Pending'  # Default status
-            transaction.save()
-            messages.success(request, "Transaksi berhasil dibuat! Silakan tunggu konfirmasi pembayaran.")
-            return redirect('membership_list')
-    else:
-        form = TransactionForm()
-
-    return render(request, 'transaction/form.html', {
-        'form': form,
-        'membership': membership,
+    return render(request, 'dashboard/trainer/classes.html', {
+        'all_classes': all_classes,
+        'my_classes': my_classes,
     })
-   
- 
-#def create_transaction(request, membership_id):
-    membership = get_object_or_404(Membership, id=membership_id)
-    member = Member.objects.get(email=request.user.email) 
 
+
+### ---   MEMBER   --- ###
+
+@login_required
+def profile_member(request):
+    try:
+        member = Member.objects.get(email=request.user.email) 
+        form = MemberUpdateForm(instance=member)
+        form_password = MemberChangePasswordForm(user=request.user)
+    except Member.DoesNotExist:
+        member = None
+
+    return render(request, 'profile.html', {
+        'member': member, 
+        'profile_form': form, 
+        'password_form' : form_password})
+
+@login_required
+def edit_profile(request, member_id):
+    try:
+        member = Member.objects.get(id=member_id)
+        if request.method == 'POST':
+            form = MemberUpdateForm(request.POST, instance=member)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Profil berhasil diperbarui')
+                return JsonResponse({'success': True})  
+        return JsonResponse({'success': False, 'error': 'Invalid form submission'})
+    except Member.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Member not found'})
+    
+@login_required
+def change_password(request):
     if request.method == 'POST':
-        # Buat transaksi baru
-        transaction = Transaction.objects.create(
-            member=member,
-            membership=membership,
-            amount=membership.price,
-            status='Pending',
-        )
-        # Redirect ke halaman konfirmasi untuk mengupload bukti pembayaran
-        return redirect('confirm_transaction', transaction_id=transaction.id) 
-
-    # Tampilkan form konfirmasi transaksi
-    return render(request, 'transaction/confirm.html', {'membership': membership})    
+        form_password = MemberChangePasswordForm(user=request.user, data=request.POST)
+        if form_password.is_valid():
+            form_password.save()  
+            update_session_auth_hash(request, form_password.user)
+            return JsonResponse({'success': True})
+        else:
+            error_messages = []
+            for field, errors in form_password.errors.items():
+                for error in errors:
+                    error_messages.append(error)  
+            error_message = " ".join(error_messages)  
+            return JsonResponse({'success': False, 'error': error_message})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 @login_required
 def create_transaction(request, membership_id):
@@ -325,9 +188,90 @@ def create_transaction(request, membership_id):
         'membership': membership,
         'member': member,  # Kirim data member ke template
     })
+    
+@login_required
+def join_class(request, class_id):
+    fitness_class = get_object_or_404(FitnessClass, id=class_id)
+    try:
+        member = Member.objects.get(email=request.user.email)    
+    except Member.DoesNotExist:
+        messages.error(request, "Anda belum terdaftar sebagai Member.")
+        return redirect('fitness_class_list')
 
+    # Periksa apakah kelas penuh
+    if fitness_class.members.count() >= fitness_class.max_participants:
+        messages.error(request, "Kelas sudah penuh.")
+        return redirect('fitness_class_list')
 
+    # Cek apakah member bisa mengambil kelas
+    if member.can_take_class():
+        # Tambahkan ke kelas karena masih dalam limit membership
+        fitness_class.add_member(member)
+        member.classes_taken += 1
+        member.save()
+        messages.success(request, f"Anda berhasil bergabung dengan kelas {fitness_class.name}.")
+        return redirect('fitness_class_list')
+    else:
+        # Arahkan ke pembayaran jika sudah mencapai limit atau tidak punya membership
+        return redirect('transaction_additional_class', class_id=class_id)
+    
+@login_required
+def transaction_additional_class(request, class_id):
+    fitness_class = get_object_or_404(FitnessClass, id=class_id)
+    
+    try:
+        member = Member.objects.get(email=request.user.email)
+    except Member.DoesNotExist:
+        messages.error(request, "Anda belum terdaftar sebagai Member.")
+        return redirect('fitness_class_list')
 
+    if request.method == 'POST':
+        if 'payment_proof' not in request.FILES:
+            messages.error(request, "Mohon upload bukti pembayaran.")
+            return render(request, 'transaction/form_class.html', {
+                'fitness_class': fitness_class
+            })
+
+        payment_proof = request.FILES['payment_proof']
+        
+        # Validasi file
+        try:
+            validate_payment_proof(payment_proof)
+        except ValidationError as e:
+            messages.error(request, str(e))
+            return render(request, 'transaction/form_class.html', {
+                'fitness_class': fitness_class
+            })
+
+        try:
+            # Buat transaksi tambahan untuk kelas
+            additional_class = AdditionalClass.objects.create(
+                member=member,
+                fit_class=fitness_class,
+                price=fitness_class.price,
+                proof_of_payment=payment_proof,  # ImageField akan otomatis handle upload
+                status='Pending'
+            )
+            
+            messages.success(request, "Transaksi berhasil dibuat. Silakan tunggu verifikasi dari admin.")
+            return redirect('transaction_history')
+            
+        except Exception as e:
+            # Jika terjadi error saat menyimpan, hapus file yang sudah terupload
+            if payment_proof:
+                try:
+                    default_storage.delete(payment_proof.name)
+                except:
+                    pass
+            messages.error(request, "Terjadi kesalahan saat membuat transaksi. Silakan coba lagi.")
+            return render(request, 'transaction/form_class.html', {
+                'fitness_class': fitness_class
+            })
+
+    return render(request, 'transaction/form_class.html', {
+        'fitness_class': fitness_class
+    })
+    
 @login_required
 def confirm_transaction(request, transaction_id):
     transaction = get_object_or_404(Transaction, id=transaction_id)
@@ -346,7 +290,283 @@ def confirm_transaction(request, transaction_id):
     
     return render(request, 'transaction/confirm.html', {'transaction': transaction})
 
+@login_required
+def member_classes(request):
+    # Ambil data member berdasarkan ID
+    member = Member.objects.get(email=request.user.email)
     
+    # Ambil kelas yang diikuti member
+    classes = member.fitnessclass_set.all()  # Karena ManyToManyField
+
+    context = {
+        'member': member,
+        'classes': classes,
+    }
+    return render(request, 'member_classes.html', context)
+
+@login_required
+def transaction_history(request):
+    try:
+        # Mendapatkan data member dari user yang sedang login
+        member = Member.objects.get(email=request.user.email)
+    except Member.DoesNotExist:
+        messages.error(request, "Anda belum terdaftar sebagai Member.")
+        return redirect('profile_member')
+
+    # Ambil semua transaksi membership dan tambahan kelas yang terkait dengan member ini
+    membership_transactions = Transaction.objects.filter(member=member).order_by('-create_date')
+    additional_class_transactions = AdditionalClass.objects.filter(member=member).order_by('-date')
+
+    context = {
+        'membership_transactions': membership_transactions,
+        'additional_class_transactions': additional_class_transactions,
+        'member': member,
+    }
+
+    return render(request, 'transaction/history.html', context)
+
+
+
+
+
+# Autentikasi untuk menu tambahan di Navbar
+def your_view(request):
+    # Pastikan user sudah login
+    if request.user.is_authenticated:
+        # Debug: print untuk mengecek group user
+        print("User Groups:", request.user.groups.all())
+        
+        is_member = request.user.groups.filter(name='Member').exists()
+        # Debug: print status member
+        print("Is Member:", is_member)
+    else:
+        is_member = False
+
+    context = {
+        'is_member': is_member,
+    }
+    return render(request, 'includes/navbar.html', context)
+
+
+### ---   ADMIN   --- ###
+
+# READ Membership
+@admin_required
+def membership_index(request):
+    memberships = Membership.objects.all()
+    return render(request, 'membership/index.html', {'memberships': memberships})
+    
+# CREATE Membership
+@admin_required
+def membership_create(request):
+    if request.method == 'POST':
+        form = MembershipsForm(request.POST)
+        if form.is_valid():
+            form.save() # Simpan data membership ke database
+            messages.success(request, 'Membership berhasil dibuat!') # Pesan sukses
+            return redirect('membership_index') # Redirect ke halaman index membership
+    else:
+        form = MembershipsForm()
+    return render(request, 'membership/create.html', {'form': form})
+
+# UPDATE Membership
+@admin_required
+def membership_update(request, membership_id):
+    membership = get_object_or_404(Membership, id=membership_id)
+    if request.method == 'POST':
+        form = MembershipsForm(request.POST, instance=membership)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Data membership berhasil diubah!')
+            return redirect('membership_index')
+    else:
+        form = MembershipsForm(instance=membership)
+    return render(request, 'membership/update.html', {'form': form, 'membership': membership})
+
+# DELETE Membership
+@admin_required
+def membership_delete(request, membership_id):
+    membership = get_object_or_404(Membership, id=membership_id)
+    membership.delete()
+    messages.success(request, 'Data membership berhasil dihapus')
+    return JsonResponse({'success': True})
+
+
+# READ Trainer
+@admin_required
+def trainer_index(request):
+    trainers = Trainer.objects.all()
+    return render(request, 'trainer/index.html', {'trainers': trainers})
+
+# CREATE Trainer
+@admin_required
+def trainer_create(request):
+    if request.method == 'POST':
+        form = TrainersForm(request.POST)
+        if form.is_valid():
+            form.save()  # Simpan data trainer ke database
+            messages.success(request, 'Trainer berhasil dibuat!')  # Pesan sukses
+            return redirect('trainer_index')  # Redirect ke halaman index trainer
+        else:
+            messages.error(request, 'Ada kesalahan dalam pengisian form.')
+    else:
+        form = TrainersForm()
+    return render(request, 'trainer/create.html', {'form': form})
+
+# UPDATE Trainer
+@admin_required
+def trainer_update(request, trainer_id):
+    trainer = get_object_or_404(Trainer, id=trainer_id)
+    
+    if request.method == 'POST':
+        form = TrainersForm(request.POST, instance=trainer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Data Pelatih berhasil diubah!')
+            return redirect('trainer_index')  # Redirect setelah berhasil
+    else:
+        form = TrainersForm(instance=trainer)  # Form untuk method GET
+    
+    return render(request, 'trainer/update.html', {'form': form, 'trainer': trainer})
+        
+# DELETE Trainer
+@admin_required
+def trainer_delete(request, trainer_id):
+    if request.method == 'POST':
+        trainer = get_object_or_404(Trainer, id=trainer_id)
+        trainer.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# READ Member 
+@admin_required
+def member_index(request):
+    members = Member.objects.all()
+    return render(request, 'member/index.html', {'members': members})
+
+# CREATE Member
+@admin_required
+def member_create(request):
+    if request.method == 'POST':
+        form = MembersForm(request.POST)
+        if form.is_valid():
+            form.save()  # Simpan data member ke database
+            messages.success(request, 'Member berhasil dibuat!')  # Pesan sukses
+            return redirect('member_index')  # Redirect ke halaman index Member
+        else:
+            messages.error(request, 'Ada kesalahan dalam pengisian form.')
+    else:
+        form = MembersForm()
+    return render(request, 'member/create.html', {'form': form})
+
+# UPDATE Member
+@admin_required
+def member_update(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    if request.method == 'POST':
+        form = MembersForm(request.POST, instance=member)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Member berhasil diperbarui!')
+            return redirect('member_index')
+    else:
+        form = MembersForm(instance=member)
+
+    return render(request, 'member/update.html', {'form': form, 'member': member})
+
+# DELETE Member
+@admin_required
+def member_delete(request, member_id):
+    membership = get_object_or_404(Member, id=member_id)
+    membership.delete()
+    messages.success(request, 'Data anggota berhasil dihapus')
+    return JsonResponse({'success': True})
+
+
+# READ Class
+@admin_required
+def fitness_class_index(request):
+    fitness_classes  = FitnessClass.objects.all()  # Mengambil data kelas fitness
+    return render(request, 'class/index.html', {'fitness_classes': fitness_classes })
+
+# CREATE Class
+@admin_required
+def fitness_class_create(request):
+    if request.method == 'POST':
+        form = FitnessClassForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Kelas berhasil dibuat!')
+            return redirect('fitness_class_index')
+        else:
+            messages.error(request, 'Ada kesalahan dalam form, silakan periksa kembali.')
+    else:
+        form = FitnessClassForm()
+    return render(request, 'class/create.html', {'form': form})
+
+# UPDATE GymClass
+@admin_required
+def fitness_class_update(request, pk):
+    fitness_class = get_object_or_404(FitnessClass, pk=pk)
+    if request.method == 'POST':
+        form = FitnessClassForm(request.POST, instance=fitness_class)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Kelas fitness berhasil diupdate!')
+            return redirect('fitness_class_index')
+        else:
+            messages.error(request, 'Ada kesalahan dalam form, silakan periksa kembali.')
+    else:
+        form = FitnessClassForm(instance=fitness_class)
+    return render(request, 'class/update.html', {'form': form})
+
+# DELETE GymClass
+@admin_required
+def fitness_class_delete(request, pk):
+    gymclass = get_object_or_404(FitnessClass, pk=pk)
+    gymclass.delete()  
+    messages.success(request, 'Kelas berhasil dihapus')
+    return JsonResponse({'success': True})
+
+
+# UPDATE Transaction
+@admin_required
+def update_additional_class(request, additional_class_id):
+    # Ambil data AdditionalClass berdasarkan ID
+    additional_class = get_object_or_404(AdditionalClass, id=additional_class_id)
+    
+    if request.method == 'POST':
+        # Ambil status dari form
+        new_status = request.POST.get('status')
+        
+        # Update status transaksi
+        additional_class.status = new_status
+        
+        # Jika status menjadi "Paid", tambahkan member ke kelas dan perbarui informasi terkait
+        if new_status == 'Paid':
+            # Tambahkan member ke kelas
+            additional_class.fit_class.add_member(additional_class.member)
+            additional_class.member.classes_taken += 1
+            additional_class.member.save()
+            messages.success(request, "Pembayaran berhasil diverifikasi, dan member telah ditambahkan ke kelas.")
+        else:
+            messages.success(request, f"Status transaksi berhasil diubah menjadi {new_status}.")
+        
+        # Simpan perubahan pada transaksi
+        additional_class.save()
+        return redirect('transaction_index')
+    
+    # Dapatkan URL gambar bukti pembayaran jika tersedia
+    proof_image_url = additional_class.proof_of_payment.url if additional_class.proof_of_payment else None
+    
+    return render(request, 'transaction/update_additional.html', {
+        'additional_class': additional_class,
+        'proof_image_url': proof_image_url
+    })
+
+# UPDATE Transaction
+@admin_required
 def transaction_update(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
     
@@ -370,7 +590,48 @@ def transaction_update(request, pk):
     })
 
 # READ Transaction 
+@admin_required
 def transaction_index(request):
     transactions = Transaction.objects.all()
-    return render(request, 'transaction/index.html', {'transactions': transactions})
+    additional_classes = AdditionalClass.objects.all()
+    return render(request, 'transaction/index.html', {
+        'transactions': transactions,
+        'additional_classes': additional_classes,
+    })
 
+def is_admin(user):
+    return user.is_staff or user.is_superuser
+
+
+    
+### ---   VALIDASI   --- ### 
+   
+def validate_payment_proof(file):
+    # Validasi ukuran file (maksimal 2MB)
+    max_size = 2 * 1024 * 1024
+    if file.size > max_size:
+        raise ValidationError('Ukuran file terlalu besar. Maksimal ukuran file adalah 2MB.')
+    
+    # Validasi tipe file
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
+    if file.content_type not in allowed_types:
+        raise ValidationError('Format file tidak didukung. Gunakan JPG atau PNG.')
+    
+    # Validasi nama file
+    valid_extensions = ['.jpg', '.jpeg', '.png']
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in valid_extensions:
+        raise ValidationError('Format file tidak didukung. Gunakan JPG atau PNG.')
+    
+    # Validasi dimensi gambar (opsional)
+    try:
+        from PIL import Image
+        img = Image.open(file)
+        max_dimension = 2000  # maksimal 2000x2000 pixels
+        if img.width > max_dimension or img.height > max_dimension:
+            raise ValidationError(
+                f'Dimensi gambar terlalu besar. Maksimal dimensi adalah {max_dimension}x{max_dimension} pixels.'
+            )
+    except:
+        # Jika gagal memvalidasi dimensi, lewati
+        pass

@@ -1,89 +1,228 @@
 {% extends 'dashboard/admin/layout.html' %}
-{% block title %} Daftar Kelas {% endblock %}
+{% block title %}Manajemen Kelas Fitness{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Daftar Kelas</h1>
-    <a href="{% url 'fitness_class_create' %}" class="btn btn-primary mb-3">Tambah Kelas</a>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nama Kelas</th>
-                <th>Pelatih</th>
-                <th>Jadwal</th>
-                <th>Harga</th>
-                <th>Maksimal Peserta</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for fitness_class in fitness_classes %}
-            <tr>
-                <td>{{ fitness_class.name }}</td>
-                <td>{{ fitness_class.trainer }}</td>
-                <td>{{ fitness_class.schedule }}</td>
-                <td>{{ fitness_class.price }}</td>
-                <td>{{ fitness_class.max_participants }}</td>
-                <td>
-                    <a href="{% url 'fitness_class_update' fitness_class.id %}" class="btn btn-sm btn-warning">Ubah</a>
-                    <button class="btn btn-sm btn-danger" onclick="confirmDelete('{{ fitness_class.id }}')">Hapus</button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Tidak ada data Kelas</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        function confirmDelete(gymclassId) {
-    Swal.fire({
-        title: 'Data Kelas akan dihapus',
-        text: 'Data tidak akan bisa dikembalikan!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, Hapus!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Menggunakan fetch untuk mengirim permintaan POST
-            fetch(`/class/delete/${gymclassId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json', // Header content type
-                    'X-CSRFToken': '{{ csrf_token }}'    // Mengirim token CSRF
-                },
-                body: JSON.stringify({}) // Menambahkan body kosong
-            }).then(response => {
-                if (response.ok) {
-                    Swal.fire(
-                        'Deleted!',
-                        'Kelas telah dihapus.',
-                        'success'
-                    ).then(() => {
-                        // Muat ulang halaman setelah sukses
-                        window.location.reload();
-                    });
-                } else {
+<div class="container-fluid px-4">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-2 text-primary">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>Manajemen Kelas Fitness
+            </h1>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-gradient-primary py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="bi bi-list-task me-2"></i>Daftar Kelas
+                    </h6>
+                    <div class="card-header-actions">
+                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <a href="{% url 'fitness_class_create' %}" class="btn btn-primary btn-lg shadow-sm">
+                                <i class="bi bi-plus-circle me-2"></i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="classTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>Nama Kelas</th>
+                                    <th>Pelatih</th>
+                                    <th>Jadwal</th>
+                                    <th>Ruangan</th>
+                                    <th>Harga</th>
+                                    <th>Kapasitas</th>
+                                    <th class="text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fitness_class in fitness_classes %}
+                                <tr class="align-middle class-row" data-id="{{ fitness_class.id }}">
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-primary-soft text-primary me-2 p-2">
+                                            </span>
+                                            {{ fitness_class.name }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {{ fitness_class.trainer }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-soft text-info">
+                                            {{ fitness_class.schedule }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-soft text-primary">
+                                            {{ fitness_class.room }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-success fw-bold">
+                                            Rp {{ fitness_class.price|floatformat:0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if fitness_class.max_participants > 20 %}
+                                                bg-success-soft text-success
+                                            {% else %}
+                                                bg-warning-soft text-warning
+                                            {% endif %}">
+                                            {{ fitness_class.max_participants }} Peserta
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group shadow-sm" role="group">
+                                            <a href="{% url 'fitness_class_update' fitness_class.id %}"
+                                                class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip"
+                                                title="Edit Kelas">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDelete('{{ fitness_class.id }}')"
+                                                data-bs-toggle="tooltip" title="Hapus Kelas">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="alert alert-info d-flex align-items-center justify-content-center">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Tidak ada data kelas tersedia
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filter -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Kelas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Tambahkan form filter di sini -->
+                <div class="mb-3">
+                    <label class="form-label">Filter Berdasarkan</label>
+                    <select class="form-select">
+                        <option>Semua Kelas</option>
+                        <option>Kelas dengan Kapasitas Tinggi</option>
+                        <option>Kelas dengan Harga Rendah</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary">Terapkan Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net/js/jquery.dataTables.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inisialisasi DataTables
+        $('#classTable').DataTable({
+            responsive: true,
+            language: {
+                search: '<i class="bi bi-search"></i>',
+                lengthMenu: 'Tampilkan _MENU_ kelas',
+                info: 'Menampilkan _START_ - _END_ dari _TOTAL_ kelas',
+                paginate: {
+                    previous: '<i class="bi bi-chevron-left"></i>',
+                    next: '<i class="bi bi-chevron-right"></i>'
+                }
+            },
+            columnDefs: [
+                { orderable: false, targets: [0, 6] }
+            ]
+        });
+
+        // Tooltip Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+
+    function confirmDelete(gymclassId) {
+        Swal.fire({
+            title: 'Konfirmasi Hapus Kelas',
+            html: `
+            <div class="text-center">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <p class="mt-3">Anda yakin ingin menghapus kelas ini?</p>
+                <small class="text-muted">Data yang dihapus tidak dapat dikembalikan</small>
+            </div>
+        `,
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/class/delete/${gymclassId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({})
+                }).then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Kelas telah dihapus.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            'Terjadi masalah saat menghapus kelas.',
+                            'error'
+                        );
+                    }
+                }).catch(error => {
                     Swal.fire(
                         'Error!',
-                        'Terjadi masalah saat menghapus kelas.',
+                        'Terjadi kesalahan jaringan.',
                         'error'
                     );
-                }
-            }).catch(error => {
-                // Menangani error dari fetch
-                Swal.fire(
-                    'Error!',
-                    'Terjadi kesalahan jaringan.',
-                    'error'
-                );
-            });
-        }
-    });
-}
-
-    </script>
-</div>
+                });
+            }
+        });
+    }
+</script>
 {% endblock %}

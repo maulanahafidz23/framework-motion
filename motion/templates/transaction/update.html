@@ -1,83 +1,143 @@
 {% extends 'dashboard/admin/layout.html' %}
-{% block title %} Update Transaksi {% endblock %}
+{% block title %}Update Transaksi | Motion Gym{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>Update Status Transaksi</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label class="form-label">Anggota</label>
-            <input type="text" class="form-control" value="{{ transaction.member.name }}" readonly>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Jumlah</label>
-            <input type="text" class="form-control" value="Rp {{ transaction.amount }}" readonly>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select">
-                <option value="Pending" {% if transaction.status == 'Pending' %}selected{% endif %}>Pending</option>
-                <option value="Paid" {% if transaction.status == 'Paid' %}selected{% endif %}>Paid</option>
-                <option value="Failed" {% if transaction.status == 'Failed' %}selected{% endif %}>Failed</option>
-            </select>
-        </div>
-        
-        <!-- Bagian Bukti Pembayaran -->
-        <div class="mb-3">
-            <label class="form-label">Bukti Pembayaran</label>
-            {% if transaction.proof_of_payment %}
-                <div class="mb-2">
-                    <img src="{{ transaction.proof_of_payment.url }}" alt="Bukti Pembayaran" 
-                         class="img-fluid" style="max-width: 400px;">
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Update Status Transaksi</h5>
                 </div>
-                <a href="{{ transaction.proof_of_payment.url }}" 
-                   class="btn btn-info btn-sm" target="_blank">
-                    Lihat Gambar Full
-                </a>
-            {% else %}
-                <div class="alert alert-info">
-                    Belum ada bukti pembayaran yang diupload
+                <div class="card-body">
+                    <!-- Informasi Transaksi -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Informasi Member</h6>
+                            <p class="mb-1"><strong>Nama:</strong> {{ transaction.member.name }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ transaction.member.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Detail Transaksi</h6>
+                            <p class="mb-1"><strong>Jumlah:</strong> Rp {{ transaction.amount }}</p>
+                            <p class="mb-1"><strong>Status Saat Ini:</strong> 
+                                <span class="badge 
+                                    {% if transaction.status == 'Paid' %}bg-success
+                                    {% elif transaction.status == 'Failed' %}bg-danger
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ transaction.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Status Transaksi -->
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Update Status</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Status Pembayaran</label>
+                                    <select name="status" class="form-select">
+                                        <option value="Pending" {% if transaction.status == 'Pending' %}selected{% endif %}>
+                                            Pending - Menunggu Verifikasi
+                                        </option>
+                                        <option value="Paid" {% if transaction.status == 'Paid' %}selected{% endif %}>
+                                            Paid - Pembayaran Diterima
+                                        </option>
+                                        <option value="Failed" {% if transaction.status == 'Failed' %}selected{% endif %}>
+                                            Failed - Pembayaran Ditolak
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">Bukti Pembayaran</h6>
+                                {% if transaction.proof_of_payment %}
+                                    <div class="mb-3">
+                                        <img src="{{ transaction.proof_of_payment.url }}" 
+                                             alt="Bukti Pembayaran" 
+                                             class="img-fluid rounded mb-2"
+                                             style="max-height: 200px; cursor: pointer;"
+                                             data-bs-toggle="modal"
+                                             data-bs-target="#imagePreviewModal">
+                                        <div>
+                                            <a href="{{ transaction.proof_of_payment.url }}" 
+                                               class="btn btn-sm btn-info"
+                                               target="_blank">
+                                                <i class="fas fa-external-link-alt"></i> Lihat Full Image
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Belum ada bukti pembayaran yang diupload
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'transaction_index' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> Update Status
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            {% endif %}
-        </div>
-
-        <!-- Tombol aksi -->
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Update Status</button>
-            <a href="{% url 'transaction_index' %}" class="btn btn-secondary">Kembali</a>
-        </div>
-    </form>
-</div>
-
-<!-- Modal untuk preview gambar (opsional) -->
-<div class="modal fade" id="imagePreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bukti Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="previewImage" src="" alt="Preview" class="img-fluid">
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal Preview Image -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Bukti Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center p-0">
+                <img src="{{ transaction.proof_of_payment.url }}" 
+                     alt="Preview Bukti Pembayaran" 
+                     class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
-    // Script untuk menampilkan preview gambar di modal (opsional)
-    document.addEventListener('DOMContentLoaded', function() {
-        const previewLinks = document.querySelectorAll('[data-preview]');
-        previewLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const imgUrl = this.getAttribute('href');
-                document.getElementById('previewImage').src = imgUrl;
-                new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
-            });
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    // Konfirmasi sebelum mengubah status
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const status = document.querySelector('select[name="status"]').value;
+        let message = '';
+
+        if (status === 'Paid') {
+            message = 'Status akan diperbarui ke "Paid". Lanjutkan?';
+        } else if (status === 'Failed') {
+            message = 'Status akan diperbarui ke "Failed". Lanjutkan?';
+        } else {
+            form.submit();
+            return;
+        }
+
+        if (confirm(message)) {
+            form.submit();
+        }
     });
+});
 </script>
-{% endblock %}
 {% endblock %}

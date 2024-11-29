@@ -1,0 +1,109 @@
+{% extends 'dashboard/trainer/layout.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-5">
+    <!-- Kelas yang Diajarkan -->
+    <div class="card shadow mb-5">
+        <div class="card-header bg-gradient bg-success text-white text-center">
+            <h3>Kelas Saya</h3>
+        </div>
+        <div class="card-body">
+            {% if my_classes %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Nama Kelas</th>
+                            <th>Jadwal</th>
+                            <th>Ruangan</th>
+                            <th>Peserta Maksimal</th>
+                            <th>Jumlah Peserta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class in my_classes %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ class.name }}</td>
+                            <td>{{ class.schedule|date:"d M Y, H:i" }}</td>
+                            <td>{{ class.room }}</td>
+                            <td>{{ class.max_participants }}</td>
+                            <td>{{ class.members.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-muted">Anda belum mengajar kelas apapun.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Semua Data Kelas -->
+    <div class="card shadow mb-5">
+        <div class="card-header bg-gradient bg-primary text-white text-center">
+            <h3>Semua Kelas</h3>
+        </div>
+        <div class="card-body">
+            {% if all_classes %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Nama Kelas</th>
+                            <th>Pelatih</th>
+                            <th>Jadwal</th>
+                            <th>Ruangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for class in all_classes %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ class.name }}</td>
+                            <td>{{ class.trainer.name }}</td>
+                            <td>{{ class.schedule|date:"d M Y, H:i" }}</td>
+                            <td>{{ class.room }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-muted">Tidak ada kelas tersedia.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    
+</div>
+
+<style>
+    h1 {
+        font-weight: 700;
+        color: var(--motion-dark-blue);
+    }
+
+    .card {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+        font-size: 0.85rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 107, 255, 0.1);
+    }
+</style>
+{% endblock %}
