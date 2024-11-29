@@ -74,7 +74,7 @@
 ![9](https://github.com/user-attachments/assets/bb89730c-0112-4718-bc76-7bbbb7e56b55)
 
 <h2>Kelola Keanggotaan</h2>
-<p>Di halaman ini, Admin dapat mengelola data Membership yang akan ditampilkan di halaman Membership/p>
+<p>Di halaman ini, Admin dapat mengelola data Membership yang akan ditampilkan di halaman Membership</p>
 
 ![10](https://github.com/user-attachments/assets/6f5124ff-8b22-46f8-8aab-dc32134b6a8e)
 
