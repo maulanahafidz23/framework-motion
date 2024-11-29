@@ -64,12 +64,12 @@
 <br>
 
 <h2>Kelola Pelatih</h2>
-<p>Di halaman ini, Admin dapat mengelola data Pelatih Gym/p>
+<p>Di halaman ini, Admin dapat mengelola data Pelatih Gym</p>
   
 ![8](https://github.com/user-attachments/assets/d0d015bf-c4e7-4c93-a493-f19cd4fe3953)
 
 <h2>Kelola Anggota</h2>
-<p>Di halaman ini, Admin dapat mengelola data Akun Pengguna Gym/p>
+<p>Di halaman ini, Admin dapat mengelola data Akun Pengguna Gym</p>
 
 ![9](https://github.com/user-attachments/assets/bb89730c-0112-4718-bc76-7bbbb7e56b55)
 
@@ -79,12 +79,12 @@
 ![10](https://github.com/user-attachments/assets/6f5124ff-8b22-46f8-8aab-dc32134b6a8e)
 
 <h2>Kelola Kelas</h2>
-<p>Di halaman ini, Admin dapat mengelola data Kelas Gym/p>
+<p>Di halaman ini, Admin dapat mengelola data Kelas Gym</p>
   
 ![11](https://github.com/user-attachments/assets/3dfd70af-fe55-4ecd-980f-2c9fb759f62e)
 
 <h2>Kelola Transaksi</h2>
-<p>Di halaman ini, Admin dapat mengelola data Transaksi membership Dan juga Transaksi Kelas tambahan/p>
+<p>Di halaman ini, Admin dapat mengelola data Transaksi membership Dan juga Transaksi Kelas tambahan</p>
   
 ![12](https://github.com/user-attachments/assets/9d5555fc-c21b-48e2-9db2-14a5e8f425d3)
 
